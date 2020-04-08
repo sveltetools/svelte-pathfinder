@@ -1,0 +1,37 @@
+{
+	"name": "svelte-pathfinder",
+	"version": "1.0.0",
+	"description": "State-based router for Svelte.",
+	"main": "index.js",
+	"module": "index.mjs",
+	"scripts": {
+		"build": "rollup -c",
+		"prepublish": "npm run lint && npm run build",
+		"lint": "eslint src"
+	},
+	"files": [
+		"index.js",
+		"index.mjs"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/PaulMaly/svelte-pathfinder.git"
+	},
+	"keywords": [
+		"svelte",
+		"svelte store"
+	],
+	"author": "PaulMaly",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/PaulMaly/svelte-pathfinder/issues"
+	},
+	"homepage": "https://github.com/PaulMaly/svelte-pathfinder#readme",
+	"devDependencies": {
+		"eslint": "latest",
+		"rollup": "latest"
+	},
+	"peerDependencies": {
+		"svelte": "latest"
+	}
+}
