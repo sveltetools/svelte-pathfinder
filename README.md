@@ -36,7 +36,7 @@ just before closing body tag.
 
 ## URL schema to state
 
-**/path***?query*`#framgent`
+**/path**?*query*`#framgent`
 
 ## API
 
