@@ -1,6 +1,7 @@
 import { writable } from 'svelte/store';
 
-import { pattern, stringifyQuery, parseQuery } from './helpers.js';
+import { pattern, stringifyQuery, parseQuery } from './helpers';
+import { prefs } from './index';
 
 export const pathStore = createStore(path => {
 	if (!(path instanceof String)) path = new String(path);
@@ -8,8 +9,9 @@ export const pathStore = createStore(path => {
 });
 
 export const queryStore = createStore(query => {
-	if (typeof query !== 'string') query = stringifyQuery(query);
-	return Object.assign(new String(query), parseQuery(query));
+	const nesting = prefs.query.nesting;
+	if (typeof query !== 'string') query = stringifyQuery(query, nesting);
+	return Object.assign(new String(query), parseQuery(query, nesting));
 });
 
 function createStore(create) {

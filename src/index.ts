@@ -1,7 +1,21 @@
 import { tick } from 'svelte';
 import { derived, writable } from 'svelte/store';
 
-import { pathStore, queryStore } from './stores.js';
+import { pathStore, queryStore } from './stores';
+
+interface SubmitEvent extends Event {
+	submitter: HTMLElement;
+}
+
+export interface Prefs {
+	query: {
+		nesting: number;
+		[key: string]: any;
+	};
+	sideEffect: boolean;
+}
+
+type HTMLFormControl = HTMLButtonElement & HTMLSelectElement & HTMLDataListElement & HTMLTextAreaElement & HTMLInputElement;
 
 const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
 
@@ -19,15 +33,22 @@ const pathname = hasLocation ? location.pathname : '',
 let popstate = false,
 	len = 0;
 
+export const prefs: Prefs = {
+	query: {
+		nesting: 3
+	},
+	sideEffect
+};
+
 export const path = pathStore(pathname);
 
 export const query = queryStore(search);
 
 export const fragment = writable(hash, set => {
 	const handler = () => set(location.hash);
-	sideEffect && window.addEventListener('hashchange', handler);
+	sideEffect && prefs.sideEffect && window.addEventListener('hashchange', handler);
 	return () => {
-		sideEffect && window.removeEventListener('hashchange', handler);
+		sideEffect && prefs.sideEffect && window.removeEventListener('hashchange', handler);
 	};
 });
 
@@ -51,23 +72,26 @@ export const url = derived(
 
 if (sideEffect) {
 	url.subscribe($url => {
+		if (!prefs.sideEffect) return;
 		if (popstate) return popstate = false;
 		history.pushState({}, null, $url);
 		len++;
 	});
 
 	state.subscribe($state => {
+		if (!prefs.sideEffect) return;
 		const url = location.pathname + location.search + location.hash;
 		history.replaceState($state, null, url);
 	});
 
 	window.addEventListener('popstate', e => {
+		if (!prefs.sideEffect) return;
 		popstate = true;
 		goto(location.href, e.state);
 	});
 }
 
-export function goto(url = '', data) {
+export function goto(url: string = '', data: {}) {
 
 	const { pathname, search, hash } = new URL(url, 'file:');
 
@@ -78,8 +102,8 @@ export function goto(url = '', data) {
 	data && tick().then(() => state.set(data));
 }
 
-export function back(pathname = '/') {
-	if (len > 0 && sideEffect) {
+export function back(pathname: string = '/') {
+	if (len > 0 && sideEffect && prefs.sideEffect) {
 		history.back();
 		len--;
 	} else {
@@ -87,7 +111,7 @@ export function back(pathname = '/') {
 	}
 }
 
-export function click(e = {}) {
+export function click(e: MouseEvent) {
 	if (
 		!e.target ||
 		e.ctrlKey ||
@@ -99,7 +123,8 @@ export function click(e = {}) {
 		e.defaultPrevented
 	) return;
 
-	const a = e.target.closest('a');
+	const target = e.target as HTMLElement;
+	const a: HTMLAnchorElement = target.closest('a');
 	if (!a || a.target || a.hasAttribute('download')) return;
 
 	const url = a.href;
@@ -109,11 +134,11 @@ export function click(e = {}) {
 	goto(url, Object.assign({}, a.dataset));
 }
 
-export function submit(e = {}) {
+export function submit(e: SubmitEvent) {
 	if (!e.target || e.defaultPrevented) return;
 
-	const form = e.target,
-		btn = isButton(document.activeElement) && document.activeElement;
+	const form: HTMLFormElement = e.target as HTMLFormElement,
+		btn: HTMLButtonElement = (e.submitter || isButton(document.activeElement) && document.activeElement) as HTMLButtonElement;
 
 	let action = form.action,
 		method = form.method,
@@ -132,25 +157,26 @@ export function submit(e = {}) {
 		search = [],
 		state = {};
 
-	const elements = form.elements,
+	const elements: HTMLFormControlsCollection = form.elements,
 		len = elements.length;
 
 	for (let i = 0; i < len; i++) {
-		if (!elements[i].name || elements[i].disabled) continue;
-		if (['checkbox', 'radio'].includes(elements[i].type) && !elements[i].checked) {
+		const element: HTMLFormControl = elements[i] as HTMLFormControl;
+		if (!element.name || element.disabled) continue;
+		if (['checkbox', 'radio'].includes(element.type) && !element.checked) {
 			continue;
 		}
-		if (isButton(elements[i]) && elements[i] !== btn) {
+		if (isButton(element) && element as HTMLButtonElement !== btn) {
 			continue;
 		}
-		if (elements[i].type === 'hidden') {
-			state[elements[i].name] = elements[i].value;
+		if (element.type === 'hidden') {
+			state[element.name] = element.value;
 			continue;
 		}
-		search.push(elements[i].name + '=' + elements[i].value);
+		search.push(element.name + '=' + element.value);
 	}
 
-	let url = (pathname + '?' + search.join('&') + hash);
+	let url: string = (pathname + '?' + search.join('&') + hash);
 	url = url[0] !== '/' ? '/' + url : url;
 
 	// strip leading "/[drive letter]:" on NW.js on Windows

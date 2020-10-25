@@ -3,7 +3,14 @@
 /*eslint no-useless-escape: "off"*/
 /*eslint no-prototype-builtins: "off"*/
 
-export function pattern(route = '') {
+type AutoConvert = boolean | null | number | string | undefined;
+
+interface ParsedParams {
+	keys: string[]
+	pattern: RegExp
+}
+
+export function pattern(route: string = ''): boolean {
 	const { pattern, keys } = parseParams(route);
 
 	const pathname = this.toString(),
@@ -20,7 +27,7 @@ export function pattern(route = '') {
 	return !!matches;
 }
 
-export function parseQuery(str = '') {
+export function parseQuery(str: string = '', deep: number = 1) {
 	return str ? str.replace('?', '')
 		.replace(/\+/g, ' ')
 		.split('&')
@@ -30,7 +37,7 @@ export function parseQuery(str = '') {
 			key = decodeURIComponent(key || '');
 			val = decodeURIComponent(val || '');
 
-			let o = parseKeys(key, val);
+			let o = parseKeys(key, val, deep);
 			obj = Object.keys(o).reduce((obj, key) => {
 				if (obj[key]) {
 					Array.isArray(obj[key]) ?
@@ -46,11 +53,20 @@ export function parseQuery(str = '') {
 		}, {}) : {};
 }
 
-export function stringifyQuery(obj = {}) {
+export function stringifyQuery(obj: object = {}, deep: number = 1) {
 	const qs = Object.keys(obj)
 		.reduce((a, k) => {
 			if (obj.hasOwnProperty(k) && isNaN(parseInt(k, 10))) {
-				a.push(k + '=' + encodeURIComponent(obj[k]));
+				if (Array.isArray(obj[k])) {
+					obj[k].forEach(v => {
+						a.push(k + '[]=' + encodeURIComponent(v));
+					})
+				} else if (typeof obj[k] === 'object' && obj[k] !== null) {
+					let o = parseKeys(k, obj[k], deep);
+					a.push(stringifyObject(o));
+				} else {
+					a.push(k + '=' + encodeURIComponent(obj[k]));
+				}
 			}
 			return a;
 		}, [])
@@ -58,10 +74,10 @@ export function stringifyQuery(obj = {}) {
 	return qs ? `?${qs}` : '';
 }
 
-function parseParams(str, loose) {
-	let arr = str.split('/'),
-		keys = [],
-		pattern = '',
+function parseParams(str: string, loose: boolean = false): ParsedParams {
+	let arr: string[] = str.split('/'),
+		keys: string[] = [],
+		pattern: string = '',
 		c, o, tmp, ext;
 
 	arr[0] || arr.shift();
@@ -88,7 +104,7 @@ function parseParams(str, loose) {
 	};
 }
 
-function convertType(val) {
+function convertType(val: string): AutoConvert {
 	if (val === 'true' || val === 'false') {
 		return Boolean(val);
 	} else if (val === 'null') {
@@ -101,16 +117,16 @@ function convertType(val) {
 	return val;
 }
 
-function parseKeys(key, val, depth = 1) {
+function parseKeys(key: string, val: any, depth: number = 1): {} {
 	const brackets = /(\[[^[\]]*])/, child = /(\[[^[\]]*])/g;
 
 	let seg = brackets.exec(key),
 		parent = seg ? key.slice(0, seg.index) : key,
-		keys = [];
+		keys: string[] = [];
 
 	parent && keys.push(parent);
 
-	let i = 0;
+	let i: number = 0;
 	while ((seg = child.exec(key)) && i < depth) {
 		i++;
 		keys.push(seg[1]);
@@ -121,10 +137,10 @@ function parseKeys(key, val, depth = 1) {
 	return parseObject(keys, val);
 }
 
-function parseObject(chain, val) {
+function parseObject(chain: string[], val: any): {} {
 	let leaf = val;
 
-	for (let i = chain.length - 1; i >= 0; --i) {
+	for (let i: number = chain.length - 1; i >= 0; --i) {
 		let root = chain[i], obj;
 
 		if (root === '[]') {
@@ -135,7 +151,7 @@ function parseObject(chain, val) {
 				j = parseInt(key, 10);
 			if (!isNaN(j) && root !== key && String(j) === key && j >= 0) {
 				obj = [];
-				obj[j] = leaf;
+				obj[j] = convertType(leaf);
 			} else {
 				obj[key] = leaf;
 			}
@@ -144,4 +160,14 @@ function parseObject(chain, val) {
 	}
 
 	return leaf;
+}
+
+function stringifyObject(obj: {} = {}, nesting: string = ''): string {
+	return Object.entries(obj).map(([key, val]) => {
+		if (typeof val === 'object') {
+			return stringifyObject(val, nesting ? nesting + `[${key}]` : key);
+		} else {
+			return [nesting + `[${key}]`, val].join('=');
+		}
+	}).join('&');
 }
