@@ -3,8 +3,6 @@
 /*eslint no-useless-escape: "off"*/
 /*eslint no-prototype-builtins: "off"*/
 
-type AutoConvert = boolean | null | number | string | undefined;
-
 interface ParsedParams {
 	keys: string[]
 	pattern: RegExp
@@ -18,7 +16,9 @@ export function pattern(route: string = ''): boolean {
 
 	if (matches) {
 		const params = keys.reduce((p, k, i) => {
-			p[k] = convertType(matches[++i]) || null;
+			p[k] = convertType(matches[++i], {
+				array: { separator: '|', format: 'separator' }
+			}) || null;
 			return p;
 		}, {});
 		Object.assign(this, params);
@@ -27,7 +27,7 @@ export function pattern(route: string = ''): boolean {
 	return !!matches;
 }
 
-export function parseQuery(str: string = '', deep: number = 1) {
+export function parseQuery(str: string = '', params) {
 	return str ? str.replace('?', '')
 		.replace(/\+/g, ' ')
 		.split('&')
@@ -37,14 +37,14 @@ export function parseQuery(str: string = '', deep: number = 1) {
 			key = decodeURIComponent(key || '');
 			val = decodeURIComponent(val || '');
 
-			let o = parseKeys(key, val, deep);
+			let o = parseKeys(key, val, params);
 			obj = Object.keys(o).reduce((obj, key) => {
 				if (obj[key]) {
 					Array.isArray(obj[key]) ?
-						obj[key] = obj[key].concat(o[key]) :
-						Object.assign(obj[key], o[key]);
+						obj[key] = obj[key].concat(convertType(o[key], params)) :
+						Object.assign(obj[key], convertType(o[key], params));
 				} else {
-					obj[key] = convertType(o[key]);
+					obj[key] = convertType(o[key], params);
 				}
 				return obj;
 			}, obj);
@@ -53,16 +53,18 @@ export function parseQuery(str: string = '', deep: number = 1) {
 		}, {}) : {};
 }
 
-export function stringifyQuery(obj: object = {}, deep: number = 1) {
+export function stringifyQuery(obj = {}, params) {
 	const qs = Object.keys(obj)
 		.reduce((a, k) => {
 			if (obj.hasOwnProperty(k) && isNaN(parseInt(k, 10))) {
 				if (Array.isArray(obj[k])) {
-					obj[k].forEach(v => {
-						a.push(k + '[]=' + encodeURIComponent(v));
-					})
+					if (params.array.format === 'separator') {
+						a.push(k + '=' + obj[k].join(params.array.separator));
+					} else {
+						obj[k].forEach(v => a.push(k + '[]=' + encodeURIComponent(v)));
+					}
 				} else if (typeof obj[k] === 'object' && obj[k] !== null) {
-					let o = parseKeys(k, obj[k], deep);
+					let o = parseKeys(k, obj[k], params);
 					a.push(stringifyObject(o));
 				} else {
 					a.push(k + '=' + encodeURIComponent(obj[k]));
@@ -104,7 +106,16 @@ function parseParams(str: string, loose: boolean = false): ParsedParams {
 	};
 }
 
-function convertType(val: string): AutoConvert {
+function convertType(val, params) {
+	if (Array.isArray(val)) {
+		val[val.length - 1] = convertType(val[val.length - 1], params);
+		return val;
+	} else if (typeof val === 'object') {
+		return Object.entries(val).reduce((obj, [k, v]) => {
+			obj[k] = convertType(v, params);
+			return obj;
+		}, {});
+	}
 	if (val === 'true' || val === 'false') {
 		return Boolean(val);
 	} else if (val === 'null') {
@@ -113,11 +124,14 @@ function convertType(val: string): AutoConvert {
 		return undefined;
 	} else if (val !== '' && !isNaN(Number(val))) {
 		return Number(val);
+	} else if (params.array.format === 'separator' && typeof val === 'string') {
+		const arr = val.split(params.array.separator);
+		return arr.length ? arr : val;
 	}
 	return val;
 }
 
-function parseKeys(key: string, val: any, depth: number = 1): {} {
+function parseKeys(key: string, val: any, params): {} {
 	const brackets = /(\[[^[\]]*])/, child = /(\[[^[\]]*])/g;
 
 	let seg = brackets.exec(key),
@@ -127,17 +141,17 @@ function parseKeys(key: string, val: any, depth: number = 1): {} {
 	parent && keys.push(parent);
 
 	let i: number = 0;
-	while ((seg = child.exec(key)) && i < depth) {
+	while ((seg = child.exec(key)) && i < params.nesting) {
 		i++;
 		keys.push(seg[1]);
 	}
 
 	seg && keys.push('[' + key.slice(seg.index) + ']');
 
-	return parseObject(keys, val);
+	return parseObject(keys, val, params);
 }
 
-function parseObject(chain: string[], val: any): {} {
+function parseObject(chain: string[], val: any, params): {} {
 	let leaf = val;
 
 	for (let i: number = chain.length - 1; i >= 0; --i) {
@@ -151,7 +165,7 @@ function parseObject(chain: string[], val: any): {} {
 				j = parseInt(key, 10);
 			if (!isNaN(j) && root !== key && String(j) === key && j >= 0) {
 				obj = [];
-				obj[j] = convertType(leaf);
+				obj[j] = convertType(leaf, params);
 			} else {
 				obj[key] = leaf;
 			}

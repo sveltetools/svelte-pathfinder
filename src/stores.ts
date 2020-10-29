@@ -9,9 +9,8 @@ export const pathStore = createStore(path => {
 });
 
 export const queryStore = createStore(query => {
-	const nesting = prefs.query.nesting;
-	if (typeof query !== 'string') query = stringifyQuery(query, nesting);
-	return Object.assign(new String(query), parseQuery(query, nesting));
+	if (typeof query !== 'string') query = stringifyQuery(query, prefs.query);
+	return Object.assign(new String(query), parseQuery(query, prefs.query));
 });
 
 function createStore(create) {

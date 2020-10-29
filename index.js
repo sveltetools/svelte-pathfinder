@@ -9,14 +9,16 @@
 	    const pathname = this.toString(), matches = pattern.exec(pathname);
 	    if (matches) {
 	        const params = keys.reduce((p, k, i) => {
-	            p[k] = convertType(matches[++i]) || null;
+	            p[k] = convertType(matches[++i], {
+	                array: { separator: '|', format: 'separator' }
+	            }) || null;
 	            return p;
 	        }, {});
 	        Object.assign(this, params);
 	    }
 	    return !!matches;
 	}
-	function parseQuery(str = '', deep = 1) {
+	function parseQuery(str = '', params) {
 	    return str ? str.replace('?', '')
 	        .replace(/\+/g, ' ')
 	        .split('&')
@@ -25,32 +27,35 @@
 	        let [key, val] = p.split('=');
 	        key = decodeURIComponent(key || '');
 	        val = decodeURIComponent(val || '');
-	        let o = parseKeys(key, val, deep);
+	        let o = parseKeys(key, val, params);
 	        obj = Object.keys(o).reduce((obj, key) => {
 	            if (obj[key]) {
 	                Array.isArray(obj[key]) ?
-	                    obj[key] = obj[key].concat(o[key]) :
-	                    Object.assign(obj[key], o[key]);
+	                    obj[key] = obj[key].concat(convertType(o[key], params)) :
+	                    Object.assign(obj[key], convertType(o[key], params));
 	            }
 	            else {
-	                obj[key] = convertType(o[key]);
+	                obj[key] = convertType(o[key], params);
 	            }
 	            return obj;
 	        }, obj);
 	        return obj;
 	    }, {}) : {};
 	}
-	function stringifyQuery(obj = {}, deep = 1) {
+	function stringifyQuery(obj = {}, params) {
 	    const qs = Object.keys(obj)
 	        .reduce((a, k) => {
 	        if (obj.hasOwnProperty(k) && isNaN(parseInt(k, 10))) {
 	            if (Array.isArray(obj[k])) {
-	                obj[k].forEach(v => {
-	                    a.push(k + '[]=' + encodeURIComponent(v));
-	                });
+	                if (params.array.format === 'separator') {
+	                    a.push(k + '=' + obj[k].join(params.array.separator));
+	                }
+	                else {
+	                    obj[k].forEach(v => a.push(k + '[]=' + encodeURIComponent(v)));
+	                }
 	            }
 	            else if (typeof obj[k] === 'object' && obj[k] !== null) {
-	                let o = parseKeys(k, obj[k], deep);
+	                let o = parseKeys(k, obj[k], params);
 	                a.push(stringifyObject(o));
 	            }
 	            else {
@@ -88,7 +93,17 @@
 	        pattern: new RegExp('^' + pattern + (loose ? '(?:$|\/)' : '\/?$'), 'i')
 	    };
 	}
-	function convertType(val) {
+	function convertType(val, params) {
+	    if (Array.isArray(val)) {
+	        val[val.length - 1] = convertType(val[val.length - 1], params);
+	        return val;
+	    }
+	    else if (typeof val === 'object') {
+	        return Object.entries(val).reduce((obj, [k, v]) => {
+	            obj[k] = convertType(v, params);
+	            return obj;
+	        }, {});
+	    }
 	    if (val === 'true' || val === 'false') {
 	        return Boolean(val);
 	    }
@@ -101,21 +116,25 @@
 	    else if (val !== '' && !isNaN(Number(val))) {
 	        return Number(val);
 	    }
+	    else if (params.array.format === 'separator' && typeof val === 'string') {
+	        const arr = val.split(params.array.separator);
+	        return arr.length ? arr : val;
+	    }
 	    return val;
 	}
-	function parseKeys(key, val, depth = 1) {
+	function parseKeys(key, val, params) {
 	    const brackets = /(\[[^[\]]*])/, child = /(\[[^[\]]*])/g;
 	    let seg = brackets.exec(key), parent = seg ? key.slice(0, seg.index) : key, keys = [];
 	    parent && keys.push(parent);
 	    let i = 0;
-	    while ((seg = child.exec(key)) && i < depth) {
+	    while ((seg = child.exec(key)) && i < params.nesting) {
 	        i++;
 	        keys.push(seg[1]);
 	    }
 	    seg && keys.push('[' + key.slice(seg.index) + ']');
-	    return parseObject(keys, val);
+	    return parseObject(keys, val, params);
 	}
-	function parseObject(chain, val) {
+	function parseObject(chain, val, params) {
 	    let leaf = val;
 	    for (let i = chain.length - 1; i >= 0; --i) {
 	        let root = chain[i], obj;
@@ -127,7 +146,7 @@
 	            const key = root.charAt(0) === '[' && root.charAt(root.length - 1) === ']' ? root.slice(1, -1) : root, j = parseInt(key, 10);
 	            if (!isNaN(j) && root !== key && String(j) === key && j >= 0) {
 	                obj = [];
-	                obj[j] = convertType(leaf);
+	                obj[j] = convertType(leaf, params);
 	            }
 	            else {
 	                obj[key] = leaf;
@@ -154,10 +173,9 @@
 	    return Object.assign(path, { pattern });
 	});
 	const queryStore = createStore(query => {
-	    const nesting = prefs.query.nesting;
 	    if (typeof query !== 'string')
-	        query = stringifyQuery(query, nesting);
-	    return Object.assign(new String(query), parseQuery(query, nesting));
+	        query = stringifyQuery(query, prefs.query);
+	    return Object.assign(new String(query), parseQuery(query, prefs.query));
 	});
 	function createStore(create) {
 	    return value => {
@@ -176,6 +194,10 @@
 	let popstate = false, len = 0;
 	const prefs = {
 	    query: {
+	        array: {
+	            separator: ',',
+	            format: 'bracket'
+	        },
 	        nesting: 3
 	    },
 	    sideEffect

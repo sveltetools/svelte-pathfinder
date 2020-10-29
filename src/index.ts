@@ -9,6 +9,10 @@ interface SubmitEvent extends Event {
 
 export interface Prefs {
 	query: {
+		array: {
+			separator: string
+			format: 'bracket' | 'separator'
+		}
 		nesting: number;
 		[key: string]: any;
 	};
@@ -35,6 +39,10 @@ let popstate = false,
 
 export const prefs: Prefs = {
 	query: {
+		array: {
+			separator: ',',
+			format: 'bracket'
+		},
 		nesting: 3
 	},
 	sideEffect
