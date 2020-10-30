@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 2.1.1
+* Minor fix of new query array param formating.
+
 # 2.1.0
 * Improve query string parsing
 * Support different formats of query string array processing, eg. `?foo[]=1&foo[]=2` (default) and NEW alternative way `?foo=1,2`.

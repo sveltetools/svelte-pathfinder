@@ -115,7 +115,7 @@ function convertType(val, params) {
     }
     else if (params.array.format === 'separator' && typeof val === 'string') {
         const arr = val.split(params.array.separator);
-        return arr.length ? arr : val;
+        return arr.length > 1 ? arr : val;
     }
     return val;
 }
