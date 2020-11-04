@@ -102,7 +102,7 @@ function convertType(val, params) {
         }, {});
     }
     if (val === 'true' || val === 'false') {
-        return Boolean(val);
+        return val === 'true';
     }
     else if (val === 'null') {
         return null;

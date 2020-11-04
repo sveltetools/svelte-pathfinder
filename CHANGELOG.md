@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 2.1.2
+* Fix boolean values convertation.
+
 # 2.1.1
 * Minor fix of new query array param formating.
 
