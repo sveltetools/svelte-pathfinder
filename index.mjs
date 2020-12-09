@@ -164,31 +164,9 @@ function stringifyObject(obj = {}, nesting = '') {
     }).join('&');
 }
 
-const pathStore = createStore(path => {
-    if (!(path instanceof String))
-        path = new String(path);
-    return Object.assign(path, { pattern });
-});
-const queryStore = createStore(query => {
-    if (typeof query !== 'string')
-        query = stringifyQuery(query, prefs.query);
-    return Object.assign(new String(query), parseQuery(query, prefs.query));
-});
-function createStore(create) {
-    return value => {
-        const { subscribe, update, set } = writable(create(value));
-        return {
-            subscribe,
-            update: reducer => update(value => create(reducer(value))),
-            set: value => set(create(value))
-        };
-    };
-}
-
-const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
-const hasWindow = typeof window !== 'undefined', hasHistory = typeof history !== 'undefined', hasLocation = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined', subWindow = hasWindow && window !== window.parent, sideEffect = hasWindow && hasHistory && !subWindow;
+const hasWindow = typeof window !== 'undefined', hasHistory = typeof history !== 'undefined', hasLocation = typeof location !== 'undefined', subWindow = hasWindow && window !== window.parent, sideEffect = hasWindow && hasHistory && !subWindow;
 const pathname = hasLocation ? location.pathname : '', search = hasLocation ? location.search : '', hash = hasLocation ? location.hash : '';
-let popstate = false, len = 0;
+let popstate = false;
 const prefs = {
     query: {
         array: {
@@ -225,7 +203,6 @@ if (sideEffect) {
         if (popstate)
             return popstate = false;
         history.pushState({}, null, $url);
-        len++;
     });
     state.subscribe($state => {
         if (!prefs.sideEffect)
@@ -247,13 +224,97 @@ function goto(url = '', data) {
     fragment.set(hash);
     data && tick().then(() => state.set(data));
 }
+
+const pathStore = createStore(path => {
+    if (!(path instanceof String))
+        path = new String(path);
+    return Object.assign(path, { pattern });
+});
+const queryStore = createStore(query => {
+    if (typeof query !== 'string')
+        query = stringifyQuery(query, prefs.query);
+    return Object.assign(new String(query), parseQuery(query, prefs.query));
+});
+function createStore(create) {
+    return value => {
+        const { subscribe, update, set } = writable(create(value));
+        return {
+            subscribe,
+            update: reducer => update(value => create(reducer(value))),
+            set: value => set(create(value))
+        };
+    };
+}
+
+const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+const hasWindow$1 = typeof window !== 'undefined', hasHistory$1 = typeof history !== 'undefined', hasLocation$1 = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined', subWindow$1 = hasWindow$1 && window !== window.parent, sideEffect$1 = hasWindow$1 && hasHistory$1 && !subWindow$1;
+const pathname$1 = hasLocation$1 ? location.pathname : '', search$1 = hasLocation$1 ? location.search : '', hash$1 = hasLocation$1 ? location.hash : '';
+let popstate$1 = false, len = 0;
+const prefs$1 = {
+    query: {
+        array: {
+            separator: ',',
+            format: 'bracket'
+        },
+        nesting: 3
+    },
+    sideEffect: sideEffect$1
+};
+const path$1 = pathStore(pathname$1);
+const query$1 = queryStore(search$1);
+const fragment$1 = writable(hash$1, set => {
+    const handler = () => set(location.hash);
+    sideEffect$1 && prefs$1.sideEffect && window.addEventListener('hashchange', handler);
+    return () => {
+        sideEffect$1 && prefs$1.sideEffect && window.removeEventListener('hashchange', handler);
+    };
+});
+const state$1 = writable({});
+const url$1 = derived([path$1, query$1, fragment$1], ([$path, $query, $fragment], set) => {
+    let skip = false;
+    tick().then(() => {
+        if (skip)
+            return;
+        set($path.toString() + $query.toString() + $fragment.toString());
+    });
+    return () => skip = true;
+}, pathname$1 + search$1 + hash$1);
+if (sideEffect$1) {
+    url$1.subscribe($url => {
+        if (!prefs$1.sideEffect)
+            return;
+        if (popstate$1)
+            return popstate$1 = false;
+        history.pushState({}, null, $url);
+        len++;
+    });
+    state$1.subscribe($state => {
+        if (!prefs$1.sideEffect)
+            return;
+        const url = location.pathname + location.search + location.hash;
+        history.replaceState($state, null, url);
+    });
+    window.addEventListener('popstate', e => {
+        if (!prefs$1.sideEffect)
+            return;
+        popstate$1 = true;
+        goto$1(location.href, e.state);
+    });
+}
+function goto$1(url = '', data) {
+    const { pathname, search, hash } = new URL(url, 'file:');
+    path$1.set(pathname);
+    query$1.set(search);
+    fragment$1.set(hash);
+    data && tick().then(() => state$1.set(data));
+}
 function back(pathname = '/') {
-    if (len > 0 && sideEffect && prefs.sideEffect) {
+    if (len > 0 && sideEffect$1 && prefs$1.sideEffect) {
         history.back();
         len--;
     }
     else {
-        tick().then(() => path.set(pathname));
+        tick().then(() => path$1.set(pathname));
     }
 }
 function click(e) {
@@ -274,7 +335,7 @@ function click(e) {
     if (!url || url.indexOf(location.origin) !== 0 || specialLinks.test(url))
         return;
     e.preventDefault();
-    goto(url, Object.assign({}, a.dataset));
+    goto$1(url, Object.assign({}, a.dataset));
 }
 function submit(e) {
     if (!e.target || e.defaultPrevented)
@@ -314,7 +375,7 @@ function submit(e) {
         url = url.replace(/^\/[a-zA-Z]:\//, '/');
     }
     e.preventDefault();
-    goto(url, state);
+    goto$1(url, state);
 }
 function isButton(el) {
     const tagName = el.tagName.toLocaleLowerCase(), type = el.type && el.type.toLocaleLowerCase();
@@ -322,4 +383,4 @@ function isButton(el) {
         ['button', 'submit', 'image'].includes(type)));
 }
 
-export { back, click, fragment, goto, path, prefs, query, state, submit, url };
+export { back, click, fragment$1 as fragment, goto$1 as goto, path$1 as path, prefs$1 as prefs, query$1 as query, state$1 as state, submit, url$1 as url };
