@@ -1,18 +1,6 @@
 interface SubmitEvent extends Event {
     submitter: HTMLElement;
 }
-export interface Prefs {
-    query: {
-        array: {
-            separator: string;
-            format: 'bracket' | 'separator';
-        };
-        nesting: number;
-        [key: string]: any;
-    };
-    sideEffect: boolean;
-}
-export declare const prefs: Prefs;
 export declare const path: {
     subscribe: (run: (value: any) => void, invalidate?: (value?: any) => void) => () => void;
     update: (reducer: any) => void;

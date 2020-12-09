@@ -4,6 +4,21 @@
 	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pathfinder = {}, global.svelte, global.store));
 }(this, (function (exports, svelte, store) { 'use strict';
 
+	const hasHistory = typeof history !== 'undefined';
+	const hasWindow = typeof window !== 'undefined';
+	const subWindow = hasWindow && window !== window.parent;
+	const sideEffect = hasWindow && hasHistory && !subWindow;
+	const prefs = {
+	    query: {
+	        array: {
+	            separator: ',',
+	            format: 'bracket'
+	        },
+	        nesting: 3
+	    },
+	    sideEffect
+	};
+
 	function pattern(route = '') {
 	    const { pattern, keys } = parseParams(route);
 	    const pathname = this.toString(), matches = pattern.exec(pathname);
@@ -167,19 +182,31 @@
 	    }).join('&');
 	}
 
-	const hasWindow = typeof window !== 'undefined', hasHistory = typeof history !== 'undefined', hasLocation = typeof location !== 'undefined', subWindow = hasWindow && window !== window.parent, sideEffect = hasWindow && hasHistory && !subWindow;
+	const pathStore = createStore(path => {
+	    if (!(path instanceof String))
+	        path = new String(path);
+	    return Object.assign(path, { pattern });
+	});
+	const queryStore = createStore(query => {
+	    if (typeof query !== 'string')
+	        query = stringifyQuery(query, prefs.query);
+	    return Object.assign(new String(query), parseQuery(query, prefs.query));
+	});
+	function createStore(create) {
+	    return value => {
+	        const { subscribe, update, set } = store.writable(create(value));
+	        return {
+	            subscribe,
+	            update: reducer => update(value => create(reducer(value))),
+	            set: value => set(create(value))
+	        };
+	    };
+	}
+
+	const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+	const hasLocation = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined';
 	const pathname = hasLocation ? location.pathname : '', search = hasLocation ? location.search : '', hash = hasLocation ? location.hash : '';
-	let popstate = false;
-	const prefs = {
-	    query: {
-	        array: {
-	            separator: ',',
-	            format: 'bracket'
-	        },
-	        nesting: 3
-	    },
-	    sideEffect
-	};
+	let popstate = false, len = 0;
 	const path = pathStore(pathname);
 	const query = queryStore(search);
 	const fragment = store.writable(hash, set => {
@@ -206,6 +233,7 @@
 	        if (popstate)
 	            return popstate = false;
 	        history.pushState({}, null, $url);
+	        len++;
 	    });
 	    state.subscribe($state => {
 	        if (!prefs.sideEffect)
@@ -227,97 +255,13 @@
 	    fragment.set(hash);
 	    data && svelte.tick().then(() => state.set(data));
 	}
-
-	const pathStore = createStore(path => {
-	    if (!(path instanceof String))
-	        path = new String(path);
-	    return Object.assign(path, { pattern });
-	});
-	const queryStore = createStore(query => {
-	    if (typeof query !== 'string')
-	        query = stringifyQuery(query, prefs.query);
-	    return Object.assign(new String(query), parseQuery(query, prefs.query));
-	});
-	function createStore(create) {
-	    return value => {
-	        const { subscribe, update, set } = store.writable(create(value));
-	        return {
-	            subscribe,
-	            update: reducer => update(value => create(reducer(value))),
-	            set: value => set(create(value))
-	        };
-	    };
-	}
-
-	const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
-	const hasWindow$1 = typeof window !== 'undefined', hasHistory$1 = typeof history !== 'undefined', hasLocation$1 = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined', subWindow$1 = hasWindow$1 && window !== window.parent, sideEffect$1 = hasWindow$1 && hasHistory$1 && !subWindow$1;
-	const pathname$1 = hasLocation$1 ? location.pathname : '', search$1 = hasLocation$1 ? location.search : '', hash$1 = hasLocation$1 ? location.hash : '';
-	let popstate$1 = false, len = 0;
-	const prefs$1 = {
-	    query: {
-	        array: {
-	            separator: ',',
-	            format: 'bracket'
-	        },
-	        nesting: 3
-	    },
-	    sideEffect: sideEffect$1
-	};
-	const path$1 = pathStore(pathname$1);
-	const query$1 = queryStore(search$1);
-	const fragment$1 = store.writable(hash$1, set => {
-	    const handler = () => set(location.hash);
-	    sideEffect$1 && prefs$1.sideEffect && window.addEventListener('hashchange', handler);
-	    return () => {
-	        sideEffect$1 && prefs$1.sideEffect && window.removeEventListener('hashchange', handler);
-	    };
-	});
-	const state$1 = store.writable({});
-	const url$1 = store.derived([path$1, query$1, fragment$1], ([$path, $query, $fragment], set) => {
-	    let skip = false;
-	    svelte.tick().then(() => {
-	        if (skip)
-	            return;
-	        set($path.toString() + $query.toString() + $fragment.toString());
-	    });
-	    return () => skip = true;
-	}, pathname$1 + search$1 + hash$1);
-	if (sideEffect$1) {
-	    url$1.subscribe($url => {
-	        if (!prefs$1.sideEffect)
-	            return;
-	        if (popstate$1)
-	            return popstate$1 = false;
-	        history.pushState({}, null, $url);
-	        len++;
-	    });
-	    state$1.subscribe($state => {
-	        if (!prefs$1.sideEffect)
-	            return;
-	        const url = location.pathname + location.search + location.hash;
-	        history.replaceState($state, null, url);
-	    });
-	    window.addEventListener('popstate', e => {
-	        if (!prefs$1.sideEffect)
-	            return;
-	        popstate$1 = true;
-	        goto$1(location.href, e.state);
-	    });
-	}
-	function goto$1(url = '', data) {
-	    const { pathname, search, hash } = new URL(url, 'file:');
-	    path$1.set(pathname);
-	    query$1.set(search);
-	    fragment$1.set(hash);
-	    data && svelte.tick().then(() => state$1.set(data));
-	}
 	function back(pathname = '/') {
-	    if (len > 0 && sideEffect$1 && prefs$1.sideEffect) {
+	    if (len > 0 && sideEffect && prefs.sideEffect) {
 	        history.back();
 	        len--;
 	    }
 	    else {
-	        svelte.tick().then(() => path$1.set(pathname));
+	        svelte.tick().then(() => path.set(pathname));
 	    }
 	}
 	function click(e) {
@@ -338,7 +282,7 @@
 	    if (!url || url.indexOf(location.origin) !== 0 || specialLinks.test(url))
 	        return;
 	    e.preventDefault();
-	    goto$1(url, Object.assign({}, a.dataset));
+	    goto(url, Object.assign({}, a.dataset));
 	}
 	function submit(e) {
 	    if (!e.target || e.defaultPrevented)
@@ -378,7 +322,7 @@
 	        url = url.replace(/^\/[a-zA-Z]:\//, '/');
 	    }
 	    e.preventDefault();
-	    goto$1(url, state);
+	    goto(url, state);
 	}
 	function isButton(el) {
 	    const tagName = el.tagName.toLocaleLowerCase(), type = el.type && el.type.toLocaleLowerCase();
@@ -388,14 +332,13 @@
 
 	exports.back = back;
 	exports.click = click;
-	exports.fragment = fragment$1;
-	exports.goto = goto$1;
-	exports.path = path$1;
-	exports.prefs = prefs$1;
-	exports.query = query$1;
-	exports.state = state$1;
+	exports.fragment = fragment;
+	exports.goto = goto;
+	exports.path = path;
+	exports.query = query;
+	exports.state = state;
 	exports.submit = submit;
-	exports.url = url$1;
+	exports.url = url;
 
 	Object.defineProperty(exports, '__esModule', { value: true });
 

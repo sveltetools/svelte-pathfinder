@@ -1,5 +1,6 @@
 import { tick } from 'svelte';
 import { derived, writable } from 'svelte/store';
+import { prefs, sideEffect } from './shared';
 
 import { pathStore, queryStore } from './stores';
 
@@ -7,28 +8,12 @@ interface SubmitEvent extends Event {
 	submitter: HTMLElement;
 }
 
-export interface Prefs {
-	query: {
-		array: {
-			separator: string
-			format: 'bracket' | 'separator'
-		}
-		nesting: number;
-		[key: string]: any;
-	};
-	sideEffect: boolean;
-}
-
 type HTMLFormControl = HTMLButtonElement & HTMLSelectElement & HTMLDataListElement & HTMLTextAreaElement & HTMLInputElement;
 
 const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
 
-const hasWindow = typeof window !== 'undefined',
-	hasHistory = typeof history !== 'undefined',
-	hasLocation = typeof location !== 'undefined',
-	hasProcess = typeof process !== 'undefined',
-	subWindow = hasWindow && window !== window.parent,
-	sideEffect = hasWindow && hasHistory && !subWindow;
+const hasLocation = typeof location !== 'undefined',
+	hasProcess = typeof process !== 'undefined';
 
 const pathname = hasLocation ? location.pathname : '',
 	search = hasLocation ? location.search : '',
@@ -36,17 +21,6 @@ const pathname = hasLocation ? location.pathname : '',
 
 let popstate = false,
 	len = 0;
-
-export const prefs: Prefs = {
-	query: {
-		array: {
-			separator: ',',
-			format: 'bracket'
-		},
-		nesting: 3
-	},
-	sideEffect
-};
 
 export const path = pathStore(pathname);
 
