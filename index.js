@@ -4,6 +4,9 @@
 	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pathfinder = {}, global.svelte, global.store));
 }(this, (function (exports, svelte, store) { 'use strict';
 
+	const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+	const hasLocation = typeof location !== 'undefined';
+	const hasProcess = typeof process !== 'undefined';
 	const hasHistory = typeof history !== 'undefined';
 	const hasWindow = typeof window !== 'undefined';
 	const subWindow = hasWindow && window !== window.parent;
@@ -203,8 +206,6 @@
 	    };
 	}
 
-	const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
-	const hasLocation = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined';
 	const pathname = hasLocation ? location.pathname : '', search = hasLocation ? location.search : '', hash = hasLocation ? location.hash : '';
 	let popstate = false, len = 0;
 	const path = pathStore(pathname);

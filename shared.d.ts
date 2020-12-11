@@ -1,3 +1,6 @@
+export declare const specialLinks: RegExp;
+export declare const hasLocation: boolean;
+export declare const hasProcess: boolean;
 export declare const sideEffect: boolean;
 export interface Prefs {
     query: {

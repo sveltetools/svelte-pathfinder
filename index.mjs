@@ -1,6 +1,9 @@
 import { tick } from 'svelte';
 import { writable, derived } from 'svelte/store';
 
+const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+const hasLocation = typeof location !== 'undefined';
+const hasProcess = typeof process !== 'undefined';
 const hasHistory = typeof history !== 'undefined';
 const hasWindow = typeof window !== 'undefined';
 const subWindow = hasWindow && window !== window.parent;
@@ -200,8 +203,6 @@ function createStore(create) {
     };
 }
 
-const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
-const hasLocation = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined';
 const pathname = hasLocation ? location.pathname : '', search = hasLocation ? location.search : '', hash = hasLocation ? location.hash : '';
 let popstate = false, len = 0;
 const path = pathStore(pathname);

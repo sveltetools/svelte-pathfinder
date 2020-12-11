@@ -1,3 +1,7 @@
+export const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+
+export const hasLocation = typeof location !== 'undefined';
+export const hasProcess = typeof process !== 'undefined';
 const hasHistory = typeof history !== 'undefined';
 const hasWindow = typeof window !== 'undefined';
 const subWindow = hasWindow && window !== window.parent;

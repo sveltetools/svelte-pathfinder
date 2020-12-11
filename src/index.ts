@@ -1,6 +1,12 @@
 import { tick } from 'svelte';
 import { derived, writable } from 'svelte/store';
-import { prefs, sideEffect } from './shared';
+import {
+	hasLocation,
+	hasProcess,
+	prefs,
+	sideEffect,
+	specialLinks,
+} from './shared';
 
 import { pathStore, queryStore } from './stores';
 
@@ -9,11 +15,6 @@ interface SubmitEvent extends Event {
 }
 
 type HTMLFormControl = HTMLButtonElement & HTMLSelectElement & HTMLDataListElement & HTMLTextAreaElement & HTMLInputElement;
-
-const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
-
-const hasLocation = typeof location !== 'undefined',
-	hasProcess = typeof process !== 'undefined';
 
 const pathname = hasLocation ? location.pathname : '',
 	search = hasLocation ? location.search : '',
