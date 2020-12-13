@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 
 import { pattern, stringifyQuery, parseQuery } from './helpers';
-import { prefs } from './index';
+import { prefs } from './shared';
 
 export const pathStore = createStore(path => {
 	if (!(path instanceof String)) path = new String(path);

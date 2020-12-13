@@ -5,7 +5,7 @@
             "jest"
         ],
         "allowSyntheticDefaultImports": true,
-        "declaration": false,
+        "declaration": true,
         "diagnostics": true,
         "target": "es2017",
         "module": "esnext",

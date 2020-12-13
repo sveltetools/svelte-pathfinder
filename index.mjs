@@ -1,6 +1,24 @@
 import { tick } from 'svelte';
 import { writable, derived } from 'svelte/store';
 
+const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+const hasLocation = typeof location !== 'undefined';
+const hasProcess = typeof process !== 'undefined';
+const hasHistory = typeof history !== 'undefined';
+const hasWindow = typeof window !== 'undefined';
+const subWindow = hasWindow && window !== window.parent;
+const sideEffect = hasWindow && hasHistory && !subWindow;
+const prefs = {
+    query: {
+        array: {
+            separator: ',',
+            format: 'bracket'
+        },
+        nesting: 3
+    },
+    sideEffect
+};
+
 function pattern(route = '') {
     const { pattern, keys } = parseParams(route);
     const pathname = this.toString(), matches = pattern.exec(pathname);
@@ -185,20 +203,8 @@ function createStore(create) {
     };
 }
 
-const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
-const hasWindow = typeof window !== 'undefined', hasHistory = typeof history !== 'undefined', hasLocation = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined', subWindow = hasWindow && window !== window.parent, sideEffect = hasWindow && hasHistory && !subWindow;
 const pathname = hasLocation ? location.pathname : '', search = hasLocation ? location.search : '', hash = hasLocation ? location.hash : '';
 let popstate = false, len = 0;
-const prefs = {
-    query: {
-        array: {
-            separator: ',',
-            format: 'bracket'
-        },
-        nesting: 3
-    },
-    sideEffect
-};
 const path = pathStore(pathname);
 const query = queryStore(search);
 const fragment = writable(hash, set => {
@@ -322,4 +328,4 @@ function isButton(el) {
         ['button', 'submit', 'image'].includes(type)));
 }
 
-export { back, click, fragment, goto, path, prefs, query, state, submit, url };
+export { back, click, fragment, goto, path, query, state, submit, url };

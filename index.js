@@ -4,6 +4,24 @@
 	(global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.pathfinder = {}, global.svelte, global.store));
 }(this, (function (exports, svelte, store) { 'use strict';
 
+	const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+	const hasLocation = typeof location !== 'undefined';
+	const hasProcess = typeof process !== 'undefined';
+	const hasHistory = typeof history !== 'undefined';
+	const hasWindow = typeof window !== 'undefined';
+	const subWindow = hasWindow && window !== window.parent;
+	const sideEffect = hasWindow && hasHistory && !subWindow;
+	const prefs = {
+	    query: {
+	        array: {
+	            separator: ',',
+	            format: 'bracket'
+	        },
+	        nesting: 3
+	    },
+	    sideEffect
+	};
+
 	function pattern(route = '') {
 	    const { pattern, keys } = parseParams(route);
 	    const pathname = this.toString(), matches = pattern.exec(pathname);
@@ -188,20 +206,8 @@
 	    };
 	}
 
-	const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
-	const hasWindow = typeof window !== 'undefined', hasHistory = typeof history !== 'undefined', hasLocation = typeof location !== 'undefined', hasProcess = typeof process !== 'undefined', subWindow = hasWindow && window !== window.parent, sideEffect = hasWindow && hasHistory && !subWindow;
 	const pathname = hasLocation ? location.pathname : '', search = hasLocation ? location.search : '', hash = hasLocation ? location.hash : '';
 	let popstate = false, len = 0;
-	const prefs = {
-	    query: {
-	        array: {
-	            separator: ',',
-	            format: 'bracket'
-	        },
-	        nesting: 3
-	    },
-	    sideEffect
-	};
 	const path = pathStore(pathname);
 	const query = queryStore(search);
 	const fragment = store.writable(hash, set => {
@@ -330,7 +336,6 @@
 	exports.fragment = fragment;
 	exports.goto = goto;
 	exports.path = path;
-	exports.prefs = prefs;
 	exports.query = query;
 	exports.state = state;
 	exports.submit = submit;

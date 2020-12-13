@@ -12,8 +12,10 @@
 	},
 	"files": [
 		"index.js",
+		"index.d.ts",
 		"index.mjs"
 	],
+	"types": "index.d.ts",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/PaulMaly/svelte-pathfinder.git"
