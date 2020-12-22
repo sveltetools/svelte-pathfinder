@@ -1,6 +1,6 @@
 {
 	"name": "svelte-pathfinder",
-	"version": "2.1.2",
+	"version": "2.2.0",
 	"description": "State-based router for Svelte.",
 	"main": "index.js",
 	"module": "index.mjs",

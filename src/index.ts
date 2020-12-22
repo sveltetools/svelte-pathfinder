@@ -23,11 +23,11 @@ const pathname = hasLocation ? location.pathname : '',
 let popstate = false,
 	len = 0;
 
-export const path = pathStore(pathname);
+const path = pathStore(pathname);
 
-export const query = queryStore(search);
+const query = queryStore(search);
 
-export const fragment = writable(hash, set => {
+const fragment = writable(hash, set => {
 	const handler = () => set(location.hash);
 	sideEffect && prefs.sideEffect && window.addEventListener('hashchange', handler);
 	return () => {
@@ -35,9 +35,9 @@ export const fragment = writable(hash, set => {
 	};
 });
 
-export const state = writable({});
+const state = writable({});
 
-export const url = derived(
+const url = derived(
 	[path, query, fragment],
 	([$path, $query, $fragment], set) => {
 
@@ -74,7 +74,7 @@ if (sideEffect) {
 	});
 }
 
-export function goto(url: string = '', data: {}) {
+function goto(url: string = '', data: {}) {
 
 	const { pathname, search, hash } = new URL(url, 'file:');
 
@@ -85,7 +85,7 @@ export function goto(url: string = '', data: {}) {
 	data && tick().then(() => state.set(data));
 }
 
-export function back(pathname: string = '/') {
+function back(pathname: string = '/') {
 	if (len > 0 && sideEffect && prefs.sideEffect) {
 		history.back();
 		len--;
@@ -94,7 +94,7 @@ export function back(pathname: string = '/') {
 	}
 }
 
-export function click(e: MouseEvent) {
+function click(e: MouseEvent) {
 	if (
 		!e.target ||
 		e.ctrlKey ||
@@ -117,7 +117,7 @@ export function click(e: MouseEvent) {
 	goto(url, Object.assign({}, a.dataset));
 }
 
-export function submit(e: SubmitEvent) {
+function submit(e: SubmitEvent) {
 	if (!e.target || e.defaultPrevented) return;
 
 	const form: HTMLFormElement = e.target as HTMLFormElement,
@@ -177,3 +177,16 @@ function isButton(el) {
 	return (tagName === 'button' || (tagName === 'input' &&
 		['button', 'submit', 'image'].includes(type)));
 }
+
+export {
+	fragment,
+	submit,
+	click,
+	prefs,
+	state,
+	query,
+	path,
+	back,
+	goto,
+	url,
+};

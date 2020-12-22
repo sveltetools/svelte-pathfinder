@@ -1,21 +1,22 @@
+import { prefs } from './shared';
 interface SubmitEvent extends Event {
     submitter: HTMLElement;
 }
-export declare const path: {
+declare const path: {
     subscribe: (run: (value: any) => void, invalidate?: (value?: any) => void) => () => void;
     update: (reducer: any) => void;
     set: (value: any) => void;
 };
-export declare const query: {
+declare const query: {
     subscribe: (run: (value: any) => void, invalidate?: (value?: any) => void) => () => void;
     update: (reducer: any) => void;
     set: (value: any) => void;
 };
-export declare const fragment: import("svelte/store").Writable<string>;
-export declare const state: import("svelte/store").Writable<{}>;
-export declare const url: import("svelte/store").Readable<string>;
-export declare function goto(url: string, data: {}): void;
-export declare function back(pathname?: string): void;
-export declare function click(e: MouseEvent): void;
-export declare function submit(e: SubmitEvent): void;
-export {};
+declare const fragment: import("svelte/store").Writable<string>;
+declare const state: import("svelte/store").Writable<{}>;
+declare const url: import("svelte/store").Readable<string>;
+declare function goto(url: string, data: {}): void;
+declare function back(pathname?: string): void;
+declare function click(e: MouseEvent): void;
+declare function submit(e: SubmitEvent): void;
+export { fragment, submit, click, prefs, state, query, path, back, goto, url, };

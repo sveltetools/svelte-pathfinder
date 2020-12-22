@@ -336,6 +336,7 @@
 	exports.fragment = fragment;
 	exports.goto = goto;
 	exports.path = path;
+	exports.prefs = prefs;
 	exports.query = query;
 	exports.state = state;
 	exports.submit = submit;

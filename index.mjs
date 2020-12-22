@@ -328,4 +328,4 @@ function isButton(el) {
         ['button', 'submit', 'image'].includes(type)));
 }
 
-export { back, click, fragment, goto, path, query, state, submit, url };
+export { back, click, fragment, goto, path, prefs, query, state, submit, url };
