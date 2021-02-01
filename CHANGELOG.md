@@ -1,5 +1,9 @@
 # svelte-pathfinder changelog
 
+# 2.2.1
+
+* Move build output to a dedicated dist folder
+
 # 2.2.0
 
 * Use single export instead of multiple.
