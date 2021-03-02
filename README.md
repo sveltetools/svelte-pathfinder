@@ -1,4 +1,4 @@
-# State-based router for Svelte 3.
+# Tiny, state-based, advanced router for SvelteJS.
 
 [![NPM version](https://img.shields.io/npm/v/svelte-pathfinder.svg?style=flat)](https://www.npmjs.com/package/svelte-pathfinder) [![NPM downloads](https://img.shields.io/npm/dm/svelte-pathfinder.svg?style=flat)](https://www.npmjs.com/package/svelte-pathfinder)
 
@@ -25,18 +25,17 @@ yarn add svelte-pathfinder
 
 CDN: [UNPKG](https://unpkg.com/svelte-pathfinder/) | [jsDelivr](https://cdn.jsdelivr.net/npm/svelte-pathfinder/) (available as `window.Pathfinder`)
 
-If you are **not** using using es6 or CDN, instead of this add 
-
 ```html
-<script src="/path/to/svelte-pathfinder/index.js"></script>
+<script src="https://unpkg.com/svelte-pathfinder/dist/pathfinder.min.js"></script>
+
+<!-- OR in modern browsers -->
+
+<script type="module" src="https://unpkg.com/svelte-pathfinder/dist/pathfinder.min.mjs"></script>
 ```
-
-just before closing body tag.
-
 
 ## URL schema to state
 
-**/path**?*query*`#framgent`
+**/path**?*query*`#fragment`
 
 ## API
 
@@ -74,15 +73,33 @@ click(event: MouseEvent)
 submit(event: SubmitEvent)
 ```
 
+### Configuration
+
+- `prefs` - preferences object
+    - `sideEffect` - manually disable/enable History API usage (changing URL) (default: auto).
+    - `convertTypes` - disable converting types when parsing query/path parameters (default: true).
+    - `nesting` - number of levels when pasring nested objects in query parameters (default: 3).
+    - `array.format` - format for arrays in query parameters (possible values: 'bracket' (default), 'separator').
+    - `array.separator` - if format is `separator` this field give you speficy which separator you want to use (default: ',').
+
+To change the preferences, just import and change them somewhere on top of your code:
+
+```javascript
+import { prefs } from 'svelte-pathfinder';
+
+prefs.convertTypes = false;
+prefs.array.format = 'separator';
+```
+
 ## Usage
 
 #### Changing markup related to the router state
 
 ```svelte
-{#if $path.pattern('/products/:id')} <!-- eg. /products/1 -->
-    <ProductView productId={$path.id} />
-{:else if $path.pattern('/products')} <!-- eg. /products?page=2&q=Apple -->
-    <ProductsList page={$query.page} search={$query.q} />
+{#if $pattern('/products/:id')} <!-- eg. /products/1 -->
+    <ProductView productId={$path.params.id} />
+{:else if $pattern('/products')} <!-- eg. /products?page=2&q=Apple -->
+    <ProductsList page={$query.params.page} search={$query.params.q} />
 {:else}
     <NotFound path={$path.toString()} />
 {/if}
@@ -92,24 +109,35 @@ submit(event: SubmitEvent)
 </Modal>
 
 <script>
-    ...
-    import { path, query, fragment } from 'svelte-pathfinder';
+    import { path, query, fragment, pattern } from 'svelte-pathfinder';
 </script>
 ```
 
 #### Changing logic related to the router state
 
 ```svelte
-<svelte:component this={Component} />
+<svelte:component this={page} />
 
 <script>
     ...
-    import { path } from 'svelte-pathfinder';
+    import { path, pattern } from 'svelte-pathfinder';
+    import routes from './routes.js';
     ...
-    $: Component = routes[$path];
+    $: page = routes.find((route) => $pattern(route.match)) || null;
+    ...
     $: if ($path.toString() === '/admin' && ! isAuthorized) {
         $path = '/forbidden';
     }
+</script>
+```
+
+#### User input
+
+```svelte
+<input bind:value={$query.params.q} type="search" placeholder="Find...">
+
+<script>
+    import { query } from 'svelte-pathfinder';
 </script>
 ```
 
@@ -122,8 +150,8 @@ import { path, query } from 'svelte-pathfinder';
 
 // with regular derived store
 export const productData = derived(path, ($path, set) => {
-    if ($path.pattern('/products/:id')) {
-        fetch(`/api/products/${$path.id}`)
+    if ($path.search('/products/')) {
+        fetch(`/api/products/${$path.params.id}`)
             .then(res => res.json())
             .then(set);
     }
@@ -140,7 +168,7 @@ export const productsList = asyncable(async $query => {
 #### Directly bind & assign values to stores
 
 ```svelte
-<input bind:value={$query.q} placeholder="Search product...">
+<input bind:value={$query.params.q} placeholder="Search product...">
 
 <button on:click={() => $fragment = '#login'}>Login</button>
 
@@ -200,9 +228,9 @@ Auto-handling all links in the application.
 
     <!-- all visible fields will be propagated to $query by name attributes -->
 
-    <input name="q" value={$query.q} placeholder="Title...">
+    <input name="q" value={$query.params.q} placeholder="Title...">
 
-    <select name="option" value={$query.option}>
+    <select name="option" value={$query.params.option}>
         <option>1</option>
         <option>2</option>
         <option>3</option>
@@ -224,9 +252,10 @@ Auto-handling all links in the application.
 Router will automatically perform `pushState` to browser History API and listening `popstate` event if the following conditions are valid:
 
 * router works in browser and global objects are available (window & history).
+* router works in browser which is support `pushState/popstate`.
 * router works in top-level window and has no parent window (eg. iframe, frame, object, window.open).
 
-If any condition is not applicable, the router will work properly but without side-effect.
+If any condition is not applicable, the router will work properly but without side-effect (changing URL).
 
 ## License
 

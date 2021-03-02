@@ -1,38 +1,34 @@
 import { tick } from 'svelte';
 import { derived, writable } from 'svelte/store';
+
 import {
+	matchPattern,
+	specialLinks,
 	hasLocation,
 	hasProcess,
-	prefs,
 	sideEffect,
-	specialLinks,
+	isButton,
+	prefs,
 } from './shared';
 
 import { pathStore, queryStore } from './stores';
 
-interface SubmitEvent extends Event {
-	submitter: HTMLElement;
-}
+const pathname = hasLocation ? location.pathname : '';
+const search = hasLocation ? location.search : '';
+const hash = hasLocation ? location.hash : '';
 
-type HTMLFormControl = HTMLButtonElement & HTMLSelectElement & HTMLDataListElement & HTMLTextAreaElement & HTMLInputElement;
-
-const pathname = hasLocation ? location.pathname : '',
-	search = hasLocation ? location.search : '',
-	hash = hasLocation ? location.hash : '';
-
-let popstate = false,
-	len = 0;
+let popstate = false;
+let len = 0;
 
 const path = pathStore(pathname);
 
 const query = queryStore(search);
 
-const fragment = writable(hash, set => {
+const fragment = writable(hash, (set) => {
 	const handler = () => set(location.hash);
 	sideEffect && prefs.sideEffect && window.addEventListener('hashchange', handler);
-	return () => {
+	return () =>
 		sideEffect && prefs.sideEffect && window.removeEventListener('hashchange', handler);
-	};
 });
 
 const state = writable({});
@@ -40,7 +36,6 @@ const state = writable({});
 const url = derived(
 	[path, query, fragment],
 	([$path, $query, $fragment], set) => {
-
 		let skip = false;
 
 		tick().then(() => {
@@ -48,34 +43,39 @@ const url = derived(
 			set($path.toString() + $query.toString() + $fragment.toString());
 		});
 
-		return () => skip = true;
+		return () => (skip = true);
 	},
 	pathname + search + hash
 );
 
+const pattern = derived(path, ($path) => (match = '*', loose) => {
+	const params = matchPattern($path.toString(), match, loose);
+	params && Object.assign($path, { params });
+	return !!params;
+});
+
 if (sideEffect) {
-	url.subscribe($url => {
+	url.subscribe(($url) => {
 		if (!prefs.sideEffect) return;
-		if (popstate) return popstate = false;
+		if (popstate) return (popstate = false);
 		history.pushState({}, null, $url);
 		len++;
 	});
 
-	state.subscribe($state => {
+	state.subscribe(($state) => {
 		if (!prefs.sideEffect) return;
 		const url = location.pathname + location.search + location.hash;
 		history.replaceState($state, null, url);
 	});
 
-	window.addEventListener('popstate', e => {
+	window.addEventListener('popstate', (e) => {
 		if (!prefs.sideEffect) return;
 		popstate = true;
 		goto(location.href, e.state);
 	});
 }
 
-function goto(url: string = '', data: {}) {
-
+function goto(url = '', data) {
 	const { pathname, search, hash } = new URL(url, 'file:');
 
 	path.set(pathname);
@@ -85,7 +85,7 @@ function goto(url: string = '', data: {}) {
 	data && tick().then(() => state.set(data));
 }
 
-function back(pathname: string = '/') {
+function back(pathname = '/') {
 	if (len > 0 && sideEffect && prefs.sideEffect) {
 		history.back();
 		len--;
@@ -94,7 +94,7 @@ function back(pathname: string = '/') {
 	}
 }
 
-function click(e: MouseEvent) {
+function click(e) {
 	if (
 		!e.target ||
 		e.ctrlKey ||
@@ -104,10 +104,12 @@ function click(e: MouseEvent) {
 		e.button ||
 		e.which !== 1 ||
 		e.defaultPrevented
-	) return;
+	)
+		return;
 
-	const target = e.target as HTMLElement;
-	const a: HTMLAnchorElement = target.closest('a');
+	const target = e.target;
+	const a = target.closest('a');
+
 	if (!a || a.target || a.hasAttribute('download')) return;
 
 	const url = a.href;
@@ -117,15 +119,15 @@ function click(e: MouseEvent) {
 	goto(url, Object.assign({}, a.dataset));
 }
 
-function submit(e: SubmitEvent) {
+function submit(e) {
 	if (!e.target || e.defaultPrevented) return;
 
-	const form: HTMLFormElement = e.target as HTMLFormElement,
-		btn: HTMLButtonElement = (e.submitter || isButton(document.activeElement) && document.activeElement) as HTMLButtonElement;
+	const form = e.target;
+	const btn = e.submitter || (isButton(document.activeElement) && document.activeElement);
 
-	let action = form.action,
-		method = form.method,
-		target = form.target;
+	let action = form.action;
+	let method = form.method;
+	let target = form.target;
 
 	if (btn) {
 		btn.hasAttribute('formaction') && (action = btn.formAction);
@@ -136,20 +138,20 @@ function submit(e: SubmitEvent) {
 	if (method && method.toLowerCase() !== 'get') return;
 	if (target && target.toLowerCase() !== '_self') return;
 
-	const { pathname, hash } = new URL(action),
-		search = [],
-		state = {};
+	const { pathname, hash } = new URL(action);
+	const search = [];
+	const state = {};
 
-	const elements: HTMLFormControlsCollection = form.elements,
-		len = elements.length;
+	const elements = form.elements;
+	const len = elements.length;
 
 	for (let i = 0; i < len; i++) {
-		const element: HTMLFormControl = elements[i] as HTMLFormControl;
+		const element = elements[i];
 		if (!element.name || element.disabled) continue;
 		if (['checkbox', 'radio'].includes(element.type) && !element.checked) {
 			continue;
 		}
-		if (isButton(element) && element as HTMLButtonElement !== btn) {
+		if (isButton(element) && element !== btn) {
 			continue;
 		}
 		if (element.type === 'hidden') {
@@ -159,10 +161,9 @@ function submit(e: SubmitEvent) {
 		search.push(element.name + '=' + element.value);
 	}
 
-	let url: string = (pathname + '?' + search.join('&') + hash);
+	let url = pathname + '?' + search.join('&') + hash;
 	url = url[0] !== '/' ? '/' + url : url;
 
-	// strip leading "/[drive letter]:" on NW.js on Windows
 	if (hasProcess && url.match(/^\/[a-zA-Z]:\//)) {
 		url = url.replace(/^\/[a-zA-Z]:\//, '/');
 	}
@@ -171,22 +172,4 @@ function submit(e: SubmitEvent) {
 	goto(url, state);
 }
 
-function isButton(el) {
-	const tagName = el.tagName.toLocaleLowerCase(),
-		type = el.type && el.type.toLocaleLowerCase();
-	return (tagName === 'button' || (tagName === 'input' &&
-		['button', 'submit', 'image'].includes(type)));
-}
-
-export {
-	fragment,
-	submit,
-	click,
-	prefs,
-	state,
-	query,
-	path,
-	back,
-	goto,
-	url,
-};
+export { fragment, pattern, submit, click, prefs, state, query, path, back, goto, url };

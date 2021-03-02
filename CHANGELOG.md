@@ -1,5 +1,26 @@
 # svelte-pathfinder changelog
 
+# 3.0.4
+* Minor fix in `package.json`.
+
+# 3.0.2
+* Add special fields to `package.json` for CDNs.
+* Add babel and prettier configs to `package.json`.
+
+# 3.0.1
+
+* Fix typings
+* Fix README
+
+# 3.0.0
+
+* (breacking change): Now `pattern()` is not a part of `path` store, but separate derived store related to `path`. Please, check an examples in README.
+* (breacking change): Now all parsed parameters of `path` and `query` stores collected in `params` property of that objects. Please, check an examples in README.
+* Re-write back to plain Javascript, but with typings support.
+* Fix for issue #10 in original repo.
+* Official SSR support. Examples coming soon!
+
+
 # 2.2.1
 
 * Move build output to a dedicated dist folder
