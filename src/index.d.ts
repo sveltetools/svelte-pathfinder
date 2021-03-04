@@ -2,7 +2,7 @@ import { Writable, Readable } from 'svelte/store';
 interface SubmitEvent extends Event {
     submitter: HTMLElement;
 }
-interface Prefs {
+export interface Prefs {
     array: {
         separator: string;
         format: 'bracket' | 'separator';
@@ -12,15 +12,28 @@ interface Prefs {
     sideEffect: boolean;
 }
 
-interface StringParams extends String {
-    params: {};
+export type Param =
+    | boolean
+    | null
+    | undefined
+    | number
+    | string
+    | Param[]
+    | Params;
+
+export interface Params {
+    [key: string]: Param;
+}
+
+export interface StringParams extends String {
+    params: Params;
 }
 
 declare const prefs: Prefs;
 declare const path: Writable<StringParams>;
 declare const query: Writable<StringParams>;
 declare const fragment: Writable<string>;
-declare const state: Writable<{}>;
+declare const state: Writable<Params>;
 declare const url: Readable<string>;
 declare const pattern: Readable<(math?: string, loose?: boolean) => boolean>;
 declare function goto(url?: string, data?: {}): void;

@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.0.6
+* Improve typings.
+
 # 3.0.5
 * Fix typings
 
