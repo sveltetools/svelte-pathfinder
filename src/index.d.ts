@@ -12,9 +12,13 @@ interface Prefs {
     sideEffect: boolean;
 }
 
+interface StringParams extends String {
+    params: {};
+}
+
 declare const prefs: Prefs;
-declare const path: Writable<String>;
-declare const query: Writable<String>;
+declare const path: Writable<StringParams>;
+declare const query: Writable<StringParams>;
 declare const fragment: Writable<string>;
 declare const state: Writable<{}>;
 declare const url: Readable<string>;

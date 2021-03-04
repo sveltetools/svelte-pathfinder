@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.0.5
+* Fix typings
+
 # 3.0.4
 * Minor fix in `package.json`.
 
