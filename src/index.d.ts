@@ -8,6 +8,8 @@ export interface Prefs {
         format: 'bracket' | 'separator';
     };
     convertTypes: boolean;
+    hashbang: boolean;
+    basePath: string;
     nesting: number;
     sideEffect: boolean;
 }

@@ -9,8 +9,9 @@ export const hasProcess = typeof process !== 'undefined';
 export const hasHistory = typeof history !== 'undefined';
 export const hasPushState = hasHistory && typeof history.pushState === 'function';
 export const hasWindow = typeof window !== 'undefined';
-export const subWindow = hasWindow && window !== window.parent;
-export const sideEffect = hasWindow && hasHistory && hasPushState && !subWindow;
+export const isSubWindow = hasWindow && window !== window.parent;
+export const isFileScheme = hasLocation && location.protocol === 'file:';
+export const sideEffect = hasWindow && hasHistory && hasPushState && !isSubWindow;
 
 export const prefs = {
 	array: {
@@ -18,13 +19,55 @@ export const prefs = {
 		format: 'bracket',
 	},
 	convertTypes: true,
+	hashbang: false,
+	basePath: '',
 	nesting: 3,
 	sideEffect,
 };
 
+export function getPath() {
+	const pathname = getLocation().pathname;
+	if (!pathname) return '';
+
+	const base = getBase();
+	const path = pathname.indexOf(base) === 0 ? pathname.substring(base.length) : pathname;
+
+	return (path[0] !== '/' ? '/' + path : path) || '/';
+}
+
+export function getLocation() {
+	if (!hasLocation) return {};
+
+	if (prefs.hashbang || isFileScheme) {
+		const hash = location.hash;
+		return new URL(hash.indexOf('#!') === 0 ? hash.substring(2) : hash.substring(1), 'file:');
+	}
+
+	return location;
+}
+
+export function getBase() {
+	if (!!prefs.basePath) return prefs.basePath;
+	if (hasLocation && (prefs.hashbang || isFileScheme)) return location.pathname;
+	return '/';
+}
+
+export function getFullURL(url) {
+	(prefs.hashbang || isFileScheme) && (url = `#!${url}`);
+	const base = getBase();
+	return (base[base.length - 1] === '/' ? base.substring(0, base.length - 1) : base) + url;
+}
+
+export function getShortURL(url) {
+	const base = getBase();
+	url = url.indexOf(base) === 0 ? url.substring(base.length) : url;
+	((prefs.hashbang || isFileScheme) && url.indexOf('#!') === 0) && (url = url.substring(2));
+	return url[0] !== '/' ? '/' + url : url;
+}
+
 export function isButton(el) {
-	const tagName = el.tagName.toLocaleLowerCase(),
-		type = el.type && el.type.toLocaleLowerCase();
+	const tagName = el.tagName.toLocaleLowerCase();
+	const type = el.type && el.type.toLocaleLowerCase();
 	return (
 		tagName === 'button' ||
 		(tagName === 'input' && ['button', 'submit', 'image'].includes(type))

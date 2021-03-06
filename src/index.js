@@ -4,18 +4,22 @@ import { derived, writable } from 'svelte/store';
 import {
 	matchPattern,
 	specialLinks,
-	hasLocation,
+	isFileScheme,
+	getLocation,
 	hasProcess,
 	sideEffect,
+	getShortURL,
+	getFullURL,
 	isButton,
+	getPath,
 	prefs,
 } from './shared';
 
 import { pathStore, queryStore } from './stores';
 
-const pathname = hasLocation ? location.pathname : '';
-const search = hasLocation ? location.search : '';
-const hash = hasLocation ? location.hash : '';
+const pathname = getPath();
+const search = getLocation().search;
+const hash = getLocation().hash;
 
 let popstate = false;
 let len = 0;
@@ -25,7 +29,7 @@ const path = pathStore(pathname);
 const query = queryStore(search);
 
 const fragment = writable(hash, (set) => {
-	const handler = () => set(location.hash);
+	const handler = () => (prefs.hashbang || isFileScheme) ? goto(location.hash) : set(location.hash);
 	sideEffect && prefs.sideEffect && window.addEventListener('hashchange', handler);
 	return () =>
 		sideEffect && prefs.sideEffect && window.removeEventListener('hashchange', handler);
@@ -58,14 +62,13 @@ if (sideEffect) {
 	url.subscribe(($url) => {
 		if (!prefs.sideEffect) return;
 		if (popstate) return (popstate = false);
-		history.pushState({}, null, $url);
+		history.pushState({}, null, getFullURL($url));
 		len++;
 	});
 
 	state.subscribe(($state) => {
 		if (!prefs.sideEffect) return;
-		const url = location.pathname + location.search + location.hash;
-		history.replaceState($state, null, url);
+		history.replaceState($state, null, location.pathname + location.search + location.hash);
 	});
 
 	window.addEventListener('popstate', (e) => {
@@ -76,7 +79,7 @@ if (sideEffect) {
 }
 
 function goto(url = '', data) {
-	const { pathname, search, hash } = new URL(url, 'file:');
+	const { pathname, search, hash } = new URL(getShortURL(url), 'file:');
 
 	path.set(pathname);
 	query.set(search);
@@ -112,8 +115,8 @@ function click(e) {
 
 	if (!a || a.target || a.hasAttribute('download')) return;
 
-	const url = a.href;
-	if (!url || url.indexOf(location.origin) !== 0 || specialLinks.test(url)) return;
+	const url = a.getAttribute('href');
+	if (!url || a.href.indexOf(location.origin) !== 0 || specialLinks.test(url)) return;
 
 	e.preventDefault();
 	goto(url, Object.assign({}, a.dataset));

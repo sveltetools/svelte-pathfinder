@@ -1,5 +1,9 @@
 # svelte-pathfinder changelog
 
+# 3.1.0
+* Support of `hashbang` routing automatically for `file://` protocol and manually via `prefs`.
+* Support of working in subdirectory using `basePath` preference in `prefs`.
+
 # 3.0.6
 * Improve typings.
 
