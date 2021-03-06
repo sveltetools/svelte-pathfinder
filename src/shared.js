@@ -10,8 +10,11 @@ export const hasHistory = typeof history !== 'undefined';
 export const hasPushState = hasHistory && typeof history.pushState === 'function';
 export const hasWindow = typeof window !== 'undefined';
 export const isSubWindow = hasWindow && window !== window.parent;
-export const isFileScheme = hasLocation && location.protocol === 'file:';
-export const sideEffect = hasWindow && hasHistory && hasPushState && !isSubWindow;
+export const isFileScheme =
+	hasLocation && (location.protocol === 'file:' || /[-_\w]+[.][\w]+$/i.test(location.pathname));
+export const sideEffect = hasWindow && hasHistory && hasLocation && !isSubWindow;
+
+export const useHashbang = !hasPushState || isFileScheme;
 
 export const prefs = {
 	array: {
@@ -38,7 +41,7 @@ export function getPath() {
 export function getLocation() {
 	if (!hasLocation) return {};
 
-	if (prefs.hashbang || isFileScheme) {
+	if (prefs.hashbang || useHashbang) {
 		const hash = location.hash;
 		return new URL(hash.indexOf('#!') === 0 ? hash.substring(2) : hash.substring(1), 'file:');
 	}
@@ -48,12 +51,12 @@ export function getLocation() {
 
 export function getBase() {
 	if (!!prefs.basePath) return prefs.basePath;
-	if (hasLocation && (prefs.hashbang || isFileScheme)) return location.pathname;
+	if (hasLocation && (prefs.hashbang || useHashbang)) return location.pathname;
 	return '/';
 }
 
 export function getFullURL(url) {
-	(prefs.hashbang || isFileScheme) && (url = `#!${url}`);
+	(prefs.hashbang || useHashbang) && (url = `#!${url}`);
 	const base = getBase();
 	return (base[base.length - 1] === '/' ? base.substring(0, base.length - 1) : base) + url;
 }
@@ -61,7 +64,7 @@ export function getFullURL(url) {
 export function getShortURL(url) {
 	const base = getBase();
 	url = url.indexOf(base) === 0 ? url.substring(base.length) : url;
-	((prefs.hashbang || isFileScheme) && url.indexOf('#!') === 0) && (url = url.substring(2));
+	(prefs.hashbang || useHashbang) && url.indexOf('#!') === 0 && (url = url.substring(2));
 	return url[0] !== '/' ? '/' + url : url;
 }
 

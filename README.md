@@ -46,6 +46,7 @@ CDN: [UNPKG](https://unpkg.com/svelte-pathfinder/) | [jsDelivr](https://cdn.jsde
 - `fragment` - represents fragment (hash) string of URL.
 - `state` - represents state object associated with the new history entry created by pushState().
 - `url` - represents full URL string.
+- `pattern` - function to match path patterns to `path.params` and return boolean result.
 
 ### Helpers
 
@@ -77,6 +78,8 @@ submit(event: SubmitEvent)
 
 - `prefs` - preferences object
     - `sideEffect` - manually disable/enable History API usage (changing URL) (default: auto).
+    - `hashbang` - manually activate hashbang-routing.
+    - `basePath` - set base path if web app is located within a nested basepath.
     - `convertTypes` - disable converting types when parsing query/path parameters (default: true).
     - `nesting` - number of levels when pasring nested objects in query parameters (default: 3).
     - `array.format` - format for arrays in query parameters (possible values: 'bracket' (default), 'separator').
@@ -256,6 +259,14 @@ Router will automatically perform `pushState` to browser History API and listeni
 * router works in top-level window and has no parent window (eg. iframe, frame, object, window.open).
 
 If any condition is not applicable, the router will work properly but without side-effect (changing URL).
+
+## `hashbang` routing (`#!`)
+
+Router will automatically switch to `hashbang` routing in the following conditions:
+
+* `History API` is not available.
+* web app has launched under `file:` protocol.
+* initial path contain exact file name with extension.
 
 ## License
 

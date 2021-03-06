@@ -4,7 +4,7 @@ import { derived, writable } from 'svelte/store';
 import {
 	matchPattern,
 	specialLinks,
-	isFileScheme,
+	useHashbang,
 	getLocation,
 	hasProcess,
 	sideEffect,
@@ -29,7 +29,8 @@ const path = pathStore(pathname);
 const query = queryStore(search);
 
 const fragment = writable(hash, (set) => {
-	const handler = () => (prefs.hashbang || isFileScheme) ? goto(location.hash) : set(location.hash);
+	const handler = () =>
+		prefs.hashbang || useHashbang ? goto(location.hash) : set(location.hash);
 	sideEffect && prefs.sideEffect && window.addEventListener('hashchange', handler);
 	return () =>
 		sideEffect && prefs.sideEffect && window.removeEventListener('hashchange', handler);
