@@ -1,5 +1,9 @@
 # svelte-pathfinder changelog
 
+# 3.1.2
+* Fix absolute URLs in `goto`.
+* Few improvements.
+
 # 3.1.1
 * Update README.
 * Switch to `hashbang` routing automatically if initial path contain file name with extension.

@@ -2,6 +2,7 @@ import { tick } from 'svelte';
 import { derived, writable } from 'svelte/store';
 
 import {
+	prependSlash,
 	matchPattern,
 	specialLinks,
 	useHashbang,
@@ -165,8 +166,7 @@ function submit(e) {
 		search.push(element.name + '=' + element.value);
 	}
 
-	let url = pathname + '?' + search.join('&') + hash;
-	url = url[0] !== '/' ? '/' + url : url;
+	let url = prependSlash(pathname + '?' + search.join('&') + hash);
 
 	if (hasProcess && url.match(/^\/[a-zA-Z]:\//)) {
 		url = url.replace(/^\/[a-zA-Z]:\//, '/');

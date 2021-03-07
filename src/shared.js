@@ -16,6 +16,8 @@ export const sideEffect = hasWindow && hasHistory && hasLocation && !isSubWindow
 
 export const useHashbang = !hasPushState || isFileScheme;
 
+const hashbang = '#!';
+
 export const prefs = {
 	array: {
 		separator: ',',
@@ -33,9 +35,9 @@ export function getPath() {
 	if (!pathname) return '';
 
 	const base = getBase();
-	const path = pathname.indexOf(base) === 0 ? pathname.substring(base.length) : pathname;
+	const path = trimPrefix(pathname, base);
 
-	return (path[0] !== '/' ? '/' + path : path) || '/';
+	return prependSlash(path);
 }
 
 export function getLocation() {
@@ -43,7 +45,7 @@ export function getLocation() {
 
 	if (prefs.hashbang || useHashbang) {
 		const hash = location.hash;
-		return new URL(hash.indexOf('#!') === 0 ? hash.substring(2) : hash.substring(1), 'file:');
+		return new URL(hash.indexOf(hashbang) === 0 ? hash.substring(2) : hash.substring(1), 'file:');
 	}
 
 	return location;
@@ -56,16 +58,19 @@ export function getBase() {
 }
 
 export function getFullURL(url) {
-	(prefs.hashbang || useHashbang) && (url = `#!${url}`);
+	(prefs.hashbang || useHashbang) && (url = hashbang + url);
 	const base = getBase();
 	return (base[base.length - 1] === '/' ? base.substring(0, base.length - 1) : base) + url;
 }
 
 export function getShortURL(url) {
+	url = trimPrefix(url, location.origin);
+
 	const base = getBase();
-	url = url.indexOf(base) === 0 ? url.substring(base.length) : url;
-	(prefs.hashbang || useHashbang) && url.indexOf('#!') === 0 && (url = url.substring(2));
-	return url[0] !== '/' ? '/' + url : url;
+	url = trimPrefix(url, base);
+
+	(prefs.hashbang || useHashbang) && (url = trimPrefix(url, hashbang));
+	return prependSlash(url);
 }
 
 export function isButton(el) {
@@ -140,6 +145,14 @@ export function stringifyQuery(obj = {}) {
 		}, [])
 		.join('&');
 	return qs ? `?${qs}` : '';
+}
+
+export function prependSlash(str) {
+	return str[0] !== '/' ? '/' + str : str;
+}
+
+function trimPrefix(str, prefix) {
+	return str.indexOf(prefix) === 0 ? str.substring(prefix.length) : str;
 }
 
 function parseParams(str, loose = false) {
