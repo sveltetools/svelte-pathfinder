@@ -45,7 +45,10 @@ export function getLocation() {
 
 	if (prefs.hashbang || useHashbang) {
 		const hash = location.hash;
-		return new URL(hash.indexOf(hashbang) === 0 ? hash.substring(2) : hash.substring(1), 'file:');
+		return new URL(
+			hash.indexOf(hashbang) === 0 ? hash.substring(2) : hash.substring(1),
+			'file:'
+		);
 	}
 
 	return location;
