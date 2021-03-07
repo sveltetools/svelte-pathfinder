@@ -1,6 +1,6 @@
 {
     "name": "svelte-pathfinder",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "description": "Tiny, state-based, advanced router for SvelteJS.",
     "main": "dist/index.js",
     "module": "dist/index.mjs",
@@ -54,12 +54,12 @@
         },
         {
             "name": "IIFE bundle",
-            "limit": "6.1 KB",
+            "limit": "6.3 KB",
             "path": "./dist/pathfinder.js"
         },
         {
             "name": "ESM bundle",
-            "limit": "5.1 KB",
+            "limit": "5.3 KB",
             "path": "./dist/pathfinder.mjs"
         },
         {
