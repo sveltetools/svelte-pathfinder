@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.1.3
+* Fix for duplicate records in browser history on each page load (#11).
+
 # 3.1.2
 * Fix absolute URLs in `goto`.
 * Few improvements.

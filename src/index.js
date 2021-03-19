@@ -22,7 +22,7 @@ const pathname = getPath();
 const search = getLocation().search;
 const hash = getLocation().hash;
 
-let popstate = false;
+let popstate = true;
 let len = 0;
 
 const path = pathStore(pathname);
