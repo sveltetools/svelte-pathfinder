@@ -13,6 +13,7 @@ import {
 	getFullURL,
 	isButton,
 	getPath,
+	closest,
 	prefs,
 } from './shared';
 
@@ -23,6 +24,7 @@ const search = getLocation().search;
 const hash = getLocation().hash;
 
 let popstate = true;
+let replace = false;
 let len = 0;
 
 const path = pathStore(pathname);
@@ -64,8 +66,9 @@ if (sideEffect) {
 	url.subscribe(($url) => {
 		if (!prefs.sideEffect) return;
 		if (popstate) return (popstate = false);
-		history.pushState({}, null, getFullURL($url));
-		len++;
+		history[replace ? 'replaceState' : 'pushState']({}, null, getFullURL($url));
+		!replace && len++;
+		replace = false;
 	});
 
 	state.subscribe(($state) => {
@@ -99,6 +102,11 @@ function back(pathname = '/') {
 	}
 }
 
+function redirect(url, data) {
+	replace = true;
+	goto(url, data);
+}
+
 function click(e) {
 	if (
 		!e.target ||
@@ -112,10 +120,10 @@ function click(e) {
 	)
 		return;
 
-	const target = e.target;
-	const a = target.closest('a');
+	const a = closest(e.target, 'a');
 
-	if (!a || a.target || a.hasAttribute('download')) return;
+	if (!a || a.target || a.hasAttribute('download') || a.getAttribute('rel') === 'external')
+		return;
 
 	const url = a.getAttribute('href');
 	if (!url || a.href.indexOf(location.origin) !== 0 || specialLinks.test(url)) return;
@@ -176,4 +184,4 @@ function submit(e) {
 	goto(url, state);
 }
 
-export { fragment, pattern, submit, click, prefs, state, query, path, back, goto, url };
+export { redirect, fragment, pattern, submit, click, prefs, state, query, path, back, goto, url };

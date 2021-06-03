@@ -85,6 +85,11 @@ export function isButton(el) {
 	);
 }
 
+export function closest(el, tagName) {
+	while (el && el.nodeName.toUpperCase() !== tagName) el = el.parentNode;
+	return !el || el.nodeName.toUpperCase() !== tagName ? null : el;
+}
+
 export function matchPattern(str, match, loose) {
 	const { pattern, keys } = parseParams(match, loose);
 	const matches = pattern.exec(str);

@@ -1,5 +1,10 @@
 # svelte-pathfinder changelog
 
+# 3.2.0
+* SVG support improved.
+* rel=external support to prevent some link handling.
+* `redirect()` function added. 
+
 # 3.1.3
 * Fix for duplicate records in browser history on each page load (#11).
 

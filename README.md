@@ -62,6 +62,12 @@ goto(url: String, state?: Object)
 back(path?: String)
 ```
 
+- `redirect` - update current url without new history record.
+
+```javascript
+redirect(url: String, state?: Object)
+```
+
 - `click` - handle click event from the link and perform navigation to its targets.
 
 ```javascript
