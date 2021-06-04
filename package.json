@@ -1,6 +1,6 @@
 {
     "name": "svelte-pathfinder",
-    "version": "3.2.0",
+    "version": "3.2.1",
     "description": "Tiny, state-based, advanced router for SvelteJS.",
     "main": "dist/index.js",
     "module": "dist/index.mjs",
@@ -34,7 +34,7 @@
     "size-limit": [
         {
             "name": "UMD output",
-            "limit": "4 KB",
+            "limit": "4.1 KB",
             "path": "./dist/index.js"
         },
         {

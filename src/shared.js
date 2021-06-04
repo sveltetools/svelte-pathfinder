@@ -77,8 +77,8 @@ export function getShortURL(url) {
 }
 
 export function isButton(el) {
-	const tagName = el.tagName.toLocaleLowerCase();
-	const type = el.type && el.type.toLocaleLowerCase();
+	const tagName = el.tagName.toLowerCase();
+	const type = el.type && el.type.toLowerCase();
 	return (
 		tagName === 'button' ||
 		(tagName === 'input' && ['button', 'submit', 'image'].includes(type))
@@ -86,8 +86,8 @@ export function isButton(el) {
 }
 
 export function closest(el, tagName) {
-	while (el && el.nodeName.toUpperCase() !== tagName) el = el.parentNode;
-	return !el || el.nodeName.toUpperCase() !== tagName ? null : el;
+	while (el && el.nodeName.toLowerCase() !== tagName) el = el.parentNode;
+	return !el || el.nodeName.toLowerCase() !== tagName ? null : el;
 }
 
 export function matchPattern(str, match, loose) {

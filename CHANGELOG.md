@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.2.1
+* Fix `click` helper issue.
+
 # 3.2.0
 * SVG support improved.
 * rel=external support to prevent some link handling.
