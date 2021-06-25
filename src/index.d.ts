@@ -39,11 +39,13 @@ declare const state: Writable<Params>;
 declare const url: Readable<string>;
 declare const pattern: Readable<(math?: string, loose?: boolean) => boolean>;
 declare function goto(url?: string, data?: {}): void;
+declare function redirect(url?: string, data?: {}): void;
 declare function back(pathname?: string): void;
 declare function click(e: MouseEvent): void;
 declare function submit(e: SubmitEvent): void;
 
 export {
+    redirect,
     fragment,
     pattern,
     submit,

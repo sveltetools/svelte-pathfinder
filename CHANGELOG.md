@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.2.2
+* Fix types.
+
 # 3.2.1
 * Fix `click` helper issue.
 
