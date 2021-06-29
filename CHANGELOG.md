@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.2.3
+* Move redirection to next tick.
+
 # 3.2.2
 * Fix types.
 

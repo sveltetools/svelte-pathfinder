@@ -103,8 +103,10 @@ function back(pathname = '/') {
 }
 
 function redirect(url, data) {
-	replace = true;
-	goto(url, data);
+	tick().then(() => {
+		replace = true;
+		goto(url, data);
+	});
 }
 
 function click(e) {
