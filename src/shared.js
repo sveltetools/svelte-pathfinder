@@ -213,7 +213,7 @@ function convertType(val) {
 		return null;
 	} else if (val === 'undefined') {
 		return undefined;
-	} else if (val !== '' && !isNaN(Number(val))) {
+	} else if (val !== '' && !isNaN(Number(val)) && Number(val).toString() === val) {
 		return Number(val);
 	} else if (prefs.array.format === 'separator' && typeof val === 'string') {
 		const arr = val.split(prefs.array.separator);

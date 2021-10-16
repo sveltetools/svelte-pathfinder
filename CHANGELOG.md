@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.3.0
+* Check that if `convertTypes=true` and the number after conversion is not equal to an initial value, we need to cancel conversion and keep it a string, because it seems to be too large a number.
+
 # 3.2.3
 * Move redirection to next tick.
 
