@@ -87,10 +87,12 @@ function goto(url = '', data) {
 	const { pathname, search, hash } = new URL(getShortURL(url), 'file:');
 
 	path.set(pathname);
-	query.set(search);
-	fragment.set(hash);
-
-	data && tick().then(() => state.set(data));
+	
+	tick().then(() => {
+		query.set(search);
+		fragment.set(hash);
+		data && state.set(data);
+	});
 }
 
 function back(pathname = '/') {
