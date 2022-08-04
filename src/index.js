@@ -87,7 +87,7 @@ function goto(url = '', data) {
 	const { pathname, search, hash } = new URL(getShortURL(url), 'file:');
 
 	path.set(pathname);
-	
+
 	tick().then(() => {
 		query.set(search);
 		fragment.set(hash);

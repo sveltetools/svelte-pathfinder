@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 3.4.0
+* Make updating of `query` and `fragment` parts of URL state in the next tick to prevent unnecessary executions of listeners when transitioning between paths.
+
 # 3.3.0
 * Check that if `convertTypes=true` and the number after conversion is not equal to an initial value, we need to cancel conversion and keep it a string, because it seems to be too large a number.
 
