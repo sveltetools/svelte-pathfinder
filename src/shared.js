@@ -37,7 +37,7 @@ export function getPath() {
 	const base = getBase();
 	const path = trimPrefix(pathname, base);
 
-	return prependSlash(path);
+	return prependPrefix(path);
 }
 
 export function getLocation() {
@@ -73,7 +73,7 @@ export function getShortURL(url) {
 	url = trimPrefix(url, base);
 
 	(prefs.hashbang || useHashbang) && (url = trimPrefix(url, hashbang));
-	return prependSlash(url);
+	return prependPrefix(url);
 }
 
 export function isButton(el) {
@@ -90,19 +90,7 @@ export function closest(el, tagName) {
 	return !el || el.nodeName.toLowerCase() !== tagName ? null : el;
 }
 
-export function matchPattern(str, match, loose) {
-	const { pattern, keys } = parseParams(match, loose);
-	const matches = pattern.exec(str);
-
-	if (!matches) return null;
-
-	return keys.reduce((p, k, i) => {
-		p[k] = (prefs.convertTypes ? convertType(matches[++i]) : matches[++i]) || null;
-		return p;
-	}, {});
-}
-
-export function parseQuery(str = '') {
+export function parseQuery(str = '', { decode = decodeURIComponent } = {}) {
 	return str
 		? str
 				.replace('?', '')
@@ -111,8 +99,8 @@ export function parseQuery(str = '') {
 				.filter(Boolean)
 				.reduce((obj, p) => {
 					let [key, val] = p.split(/=(.*)/, 2);
-					key = decodeURIComponent(key || '');
-					val = decodeURIComponent(val || '');
+					key = decode(key || '');
+					val = decode(val || '');
 
 					let o = parseKeys(key, val);
 					obj = Object.keys(o).reduce((obj, key) => {
@@ -132,7 +120,7 @@ export function parseQuery(str = '') {
 		: {};
 }
 
-export function stringifyQuery(obj = {}) {
+export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 	const qs = Object.keys(obj)
 		.reduce((a, k) => {
 			if (obj.hasOwnProperty(k) && isNaN(parseInt(k, 10))) {
@@ -140,13 +128,13 @@ export function stringifyQuery(obj = {}) {
 					if (prefs.array.format === 'separator') {
 						a.push(k + '=' + obj[k].join(prefs.array.separator));
 					} else {
-						obj[k].forEach((v) => a.push(k + '[]=' + encodeURIComponent(v)));
+						obj[k].forEach((v) => a.push(k + '[]=' + encode(v)));
 					}
 				} else if (typeof obj[k] === 'object' && obj[k] !== null) {
 					let o = parseKeys(k, obj[k]);
 					a.push(stringifyObject(o));
 				} else {
-					a.push(k + '=' + encodeURIComponent(obj[k]));
+					a.push(k + '=' + encode(obj[k]));
 				}
 			}
 			return a;
@@ -155,45 +143,68 @@ export function stringifyQuery(obj = {}) {
 	return qs ? `?${qs}` : '';
 }
 
-export function prependSlash(str) {
-	return str[0] !== '/' ? '/' + str : str;
-}
+export function parseParams(
+	path = '',
+	pattern = '*',
+	{ loose = false, sensitive = false, decode = decodeURIComponent } = {}
+) {
+	const pos = [];
+	const rgx = pattern.split('/').reduce((rgx, seg, i, { length }) => {
+		if (seg) {
+			const pfx = seg[0];
+			if (pfx === '*') {
+				pos.push('wild');
+				rgx += '/(?<wild>.*)';
+			} else if (pfx === ':') {
+				const opt = seg.indexOf('?', 1);
+				const ext = seg.indexOf('.', 1);
+				const isOpt = !!~opt;
+				const isExt = !!~ext;
 
-function trimPrefix(str, prefix) {
-	return str.indexOf(prefix) === 0 ? str.substring(prefix.length) : str;
-}
+				const key = seg.substring(1, isOpt ? opt : isExt ? ext : seg.length);
+				pos.push(key);
 
-function parseParams(str, loose = false) {
-	let arr = str.split('/'),
-		keys = [],
-		pattern = '',
-		c,
-		o,
-		tmp,
-		ext;
-
-	arr[0] || arr.shift();
-
-	while ((tmp = arr.shift())) {
-		c = tmp[0];
-		if (c === '*') {
-			keys.push('wild');
-			pattern += '/(.*)';
-		} else if (c === ':') {
-			o = tmp.indexOf('?', 1);
-			ext = tmp.indexOf('.', 1);
-			keys.push(tmp.substring(1, !!~o ? o : !!~ext ? ext : tmp.length));
-			pattern += !!~o && !~ext ? '(?:/([^/]+?))?' : '/([^/]+?)';
-			if (!!~ext) pattern += (!!~o ? '?' : '') + '\\' + tmp.substring(ext);
-		} else {
-			pattern += '/' + tmp;
+				rgx += isOpt && !isExt ? '(?:/(?<' + key + '>[^/]+?))?' : '/(?<' + key + '>[^/]+?)';
+				if (isExt) rgx += (isOpt ? '?' : '') + '\\' + seg.substring(ext);
+			} else {
+				pos.push(null);
+				rgx += '/' + seg;
+			}
 		}
-	}
 
-	return {
-		keys,
-		pattern: new RegExp('^' + pattern + (loose ? '(?:$|/)' : '/?$'), 'i'),
-	};
+		if (i === length - 1) {
+			rgx += loose ? '(?:$|/)' : '/?$';
+		}
+
+		return rgx;
+	}, '^');
+
+	const flags = sensitive ? '' : 'i';
+
+	const matches = new RegExp(rgx, flags).exec(path);
+
+	if (!matches || !matches.groups) return [null, pos];
+
+	const params = Object.entries(matches.groups).reduce((params, [key, val]) => {
+		const value = decode(val);
+		params[key] = prefs.convertTypes ? convertType(value) : value;
+		return params;
+	}, {});
+
+	return [params, pos];
+}
+
+export function prependPrefix(str, pfx = '/') {
+	return str[0] !== pfx ? pfx + str : str;
+}
+
+export function trimPrefix(str, pfx) {
+	return str.indexOf(pfx) === 0 ? str.substring(pfx.length) : str;
+}
+
+export function shallowCopy(value) {
+	if (typeof value !== 'object' || value === null) return value;
+	return Array.isArray(value) ? [...value] : { ...value };
 }
 
 function convertType(val) {

@@ -39,21 +39,56 @@ CDN: [UNPKG](https://unpkg.com/svelte-pathfinder/) | [jsDelivr](https://cdn.jsde
 
 ## API
 
-### Stores
+### Stores (instances)
 
-- `path` - represents path segments of the URL as an object.
+- `path` - represents path segments of the URL as an array.
+
+```javascript
+path: Writable<[]>
+```
+
 - `query` - represents query params of the URL as an object.
+
+```javascript
+query: Writable<{}>
+```
+
 - `fragment` - represents fragment (hash) string of URL.
+
+```javascript
+fragment: Writable<string>
+```
+
 - `state` - represents state object associated with the new history entry created by pushState().
+
+```javascript
+state: Writable<{}>
+```
+
 - `url` - represents full URL string.
-- `pattern` - function to match path patterns to `path.params` and return boolean result.
+
+```javascript
+url: Readable<string>
+```
+
+- `pattern` - function to match path patterns and return read-only `params` object or `null`.
+
+```javascript
+pattern: Readable<<T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null>
+```
+
+- `paramable` - constructor of custom `params` stores to parse path patterns and manipulate path parameters.
+
+```javascript
+paramable: <T extends {}>(pattern?: string, options?: ParseParamsOptions): Writable<T>;
+```
 
 ### Helpers
 
 - `goto` - perform navigation to the next router state by URL.
 
 ```javascript
-goto(url: String, state?: Object)
+goto(url: String, state?: Object);
 ```
 
 - `back` - perform navigation to the previous router state.
@@ -102,15 +137,15 @@ prefs.array.format = 'separator';
 
 ## Usage
 
-#### Changing markup related to the router state
+### Changing markup related to the router state
 
 ```svelte
-{#if $pattern('/products/:id')} <!-- eg. /products/1 -->
-    <ProductView productId={$path.params.id} />
-{:else if $pattern('/products')} <!-- eg. /products?page=2&q=Apple -->
-    <ProductsList page={$query.params.page} search={$query.params.q} />
+{#if params = $pattern('/products/:id')} <!-- eg. /products/1 -->
+    <ProductView productId={params.id} />
+{:else if params = $pattern('/products')} <!-- eg. /products?page=2&q=Apple -->
+    <ProductsList page={$query.page} search={$query.q} />
 {:else}
-    <NotFound path={$path.toString()} />
+    <NotFound path={$path} />
 {/if}
 
 <Modal open={$fragment === '#login'}>
@@ -119,48 +154,101 @@ prefs.array.format = 'separator';
 
 <script>
     import { path, query, fragment, pattern } from 'svelte-pathfinder';
+    let params;
 </script>
 ```
 
 #### Changing logic related to the router state
 
 ```svelte
-<svelte:component this={page} />
+{#if page}
+    <svelte:component this={page.component} {params} />
+{/if}
 
 <script>
     ...
     import { path, pattern } from 'svelte-pathfinder';
-    import routes from './routes.js';
+    import routes from './routes.js'; // [{ pattern: '/products', component: ProductsList }, ...]
     ...
-    $: page = routes.find((route) => $pattern(route.match)) || null;
+    let params;
+    $: page = routes.find((route) => params = $pattern(route.pattern)) || null; // match path pattens and get parsed params
     ...
-    $: if ($path.toString() === '/admin' && ! isAuthorized) {
-        $path = '/forbidden';
+    $: if ($path[0] === 'admin' && ! isAuthorized) { // check any specific segment of the path
+        $path = '/forbidden'; // re-write whole path
     }
 </script>
 ```
 
-#### User input
+### Performing updates of router state with optional side-effect to URL
 
 ```svelte
-<input bind:value={$query.params.q} type="search" placeholder="Find...">
-
 <script>
-    import { query } from 'svelte-pathfinder';
+    ...
+    $query.page = 10; // set ?page=10 without changing or loose other query params
+    ...
+    $path[1] = 4; // set second segment of the path, e.g. /products/4
+    ...
+    $fragment = '#login'; // set url hash to #login 
+    ...
+    $state = { restoreOnBack: 'something' }; // set history record related state object
 </script>
 ```
 
-#### Use with the other stores
+#### Directly bind & assign values to stores
+
+```svelte
+<input bind:value={$query.q} placeholder="Search product...">
+...
+<button on:click={() => $fragment = '#login'}>Login</button>
+...
+<a href="/products/{product.id}" on:click|preventDefault={e => $path[1] = product.id}>
+    {product.title}
+</a>
+```
+
+### Creating stores to manipulating path parameters
+
+```javascript
+// ./stores/params.js
+
+import { paramable } from 'svelte-pathfinder';
+
+export const productPageParams = paramable('/products/:category/:productId?');
+...
+```
+
+```svelte
+<select bind:value={$params.category}>
+    <option value="all">All</option>
+    {#each categories as category}
+        <option value={category.slug}>{category.name}</option>
+    {/each}
+</select>
+...
+{#each products as product} 
+    <a href="/products/{product.id}" on:click|preventDefault={e => $params.productId = product.id}>
+        {product.title}
+    </a>
+{/each}
+
+<script>
+    import { productPageParams as params } from './store/params';
+</script>
+```
+
+### Use with the other stores
 
 ```javascript
 import { derived } from 'svelte/store';
 import asyncable from 'svelte-asyncable';
 import { path, query } from 'svelte-pathfinder';
 
+ import { productPageParams } from './store/params';
+
 // with regular derived store
-export const productData = derived(path, ($path, set) => {
-    if ($path.search('/products/')) {
-        fetch(`/api/products/${$path.params.id}`)
+export const productData = derived(productPageParams, ($params, set) => {
+    if ($params.productId}) {
+        fetch(`/api/products/${$params.productId}`)
             .then(res => res.json())
             .then(set);
     }
@@ -172,18 +260,6 @@ export const productsList = asyncable(async $query => {
     return res.json();
 }, undefined, [ query ]);
 
-```
-
-#### Directly bind & assign values to stores
-
-```svelte
-<input bind:value={$query.params.q} placeholder="Search product...">
-
-<button on:click={() => $fragment = '#login'}>Login</button>
-
-<a href="/products/10" on:click={e => $path = '/products/10'}>
-    Product 10
-</a>
 ```
 
 ### Using helper `click`

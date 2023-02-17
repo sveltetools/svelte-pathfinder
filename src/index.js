@@ -2,10 +2,10 @@ import { tick } from 'svelte';
 import { derived, writable } from 'svelte/store';
 
 import {
-	prependSlash,
-	matchPattern,
+	prependPrefix,
 	specialLinks,
 	useHashbang,
+	parseParams,
 	getLocation,
 	hasProcess,
 	sideEffect,
@@ -17,7 +17,7 @@ import {
 	prefs,
 } from './shared';
 
-import { pathStore, queryStore } from './stores';
+import { pathStore, queryStore, createParamStore } from './stores';
 
 const pathname = getPath();
 const search = getLocation().search;
@@ -48,7 +48,7 @@ const url = derived(
 
 		tick().then(() => {
 			if (skip) return;
-			set($path.toString() + $query.toString() + $fragment.toString());
+			set($path.toString() + $query.toString() + prependPrefix($fragment.toString(), '#'));
 		});
 
 		return () => (skip = true);
@@ -56,10 +56,9 @@ const url = derived(
 	pathname + search + hash
 );
 
-const pattern = derived(path, ($path) => (match = '*', loose) => {
-	const params = matchPattern($path.toString(), match, loose);
-	params && Object.assign($path, { params });
-	return !!params;
+const pattern = derived(path, ($path) => (...args) => {
+	const [params] = parseParams($path.toString(), ...args);
+	return params;
 });
 
 if (sideEffect) {
@@ -178,7 +177,7 @@ function submit(e) {
 		search.push(element.name + '=' + element.value);
 	}
 
-	let url = prependSlash(pathname + '?' + search.join('&') + hash);
+	let url = prependPrefix(pathname + '?' + search.join('&') + hash);
 
 	if (hasProcess && url.match(/^\/[a-zA-Z]:\//)) {
 		url = url.replace(/^\/[a-zA-Z]:\//, '/');
@@ -187,5 +186,7 @@ function submit(e) {
 	e.preventDefault();
 	goto(url, state);
 }
+
+export const paramable = createParamStore(path);
 
 export { redirect, fragment, pattern, submit, click, prefs, state, query, path, back, goto, url };
