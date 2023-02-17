@@ -7,7 +7,7 @@ interface SubmitEvent extends Event {
 interface ParseParamsOptions {
     loose?: boolean;
     sensitive?: boolean;
-    decode?: typeof decodeURIComponent
+    decode?: typeof decodeURIComponent;
 }
 
 export interface Prefs {
@@ -28,7 +28,9 @@ declare const query: Writable<{}>;
 declare const fragment: Writable<string>;
 declare const state: Writable<{}>;
 declare const url: Readable<string>;
-declare const pattern: Readable<<T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null>;
+declare const pattern: Readable<
+    <T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null
+>;
 
 declare function goto(url?: string, data?: {}): void;
 declare function redirect(url?: string, data?: {}): void;
@@ -36,7 +38,10 @@ declare function back(pathname?: string): void;
 declare function click(e: MouseEvent): void;
 declare function submit(e: SubmitEvent): void;
 
-declare function paramable<T extends {}>(pattern?: string, options?: ParseParamsOptions): Writable<T>;
+declare function paramable<T extends {}>(
+    pattern?: string,
+    options?: ParseParamsOptions
+): Writable<T>;
 
 export {
     paramable,

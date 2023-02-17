@@ -1,8 +1,3 @@
-/*eslint no-extra-boolean-cast: "off"*/
-/*eslint no-cond-assign: "off"*/
-/*eslint no-useless-escape: "off"*/
-/*eslint no-prototype-builtins: "off"*/
-
 export const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
 export const hasLocation = typeof location !== 'undefined';
 export const hasProcess = typeof process !== 'undefined';
@@ -55,7 +50,7 @@ export function getLocation() {
 }
 
 export function getBase() {
-	if (!!prefs.basePath) return prefs.basePath;
+	if (prefs.basePath) return prefs.basePath;
 	if (hasLocation && (prefs.hashbang || useHashbang)) return location.pathname;
 	return '/';
 }
@@ -123,7 +118,7 @@ export function parseQuery(str = '', { decode = decodeURIComponent } = {}) {
 export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 	const qs = Object.keys(obj)
 		.reduce((a, k) => {
-			if (obj.hasOwnProperty(k) && isNaN(parseInt(k, 10))) {
+			if (Object.prototype.hasOwnProperty.call(obj, k) && isNaN(parseInt(k, 10))) {
 				if (Array.isArray(obj[k])) {
 					if (prefs.array.format === 'separator') {
 						a.push(k + '=' + obj[k].join(prefs.array.separator));
