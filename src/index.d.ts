@@ -1,10 +1,10 @@
 import { Writable, Readable } from 'svelte/store';
 
-interface SubmitEvent extends Event {
+export interface SubmitEvent extends Event {
     submitter: HTMLElement;
 }
 
-interface ParseParamsOptions {
+export interface ParseParamsOptions {
     loose?: boolean;
     sensitive?: boolean;
     decode?: typeof decodeURIComponent;
@@ -22,11 +22,13 @@ export interface Prefs {
     sideEffect: boolean;
 }
 
+export type ConvertedParam = string | boolean | number | {} | [] | null | undefined;
+
 declare const prefs: Prefs;
-declare const path: Writable<[]>;
-declare const query: Writable<{}>;
+declare const path: Writable<ConvertedParam[]>;
+declare const query: Writable<{ [key: string]: ConvertedParam }>;
 declare const fragment: Writable<string>;
-declare const state: Writable<{}>;
+declare const state: Writable<{ [key: string]: any }>;
 declare const url: Readable<string>;
 declare const pattern: Readable<
     <T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null
