@@ -1,4 +1,9 @@
-import { Writable, Readable } from 'svelte/store';
+import { Writable, Readable, Updater } from 'svelte/store';
+
+export interface Parsable<T> extends Readable<T> {
+    set(this: void, value: T | string): void;
+    update(this: void, updater: Updater<T | string>): void;
+}
 
 export interface SubmitEvent extends Event {
     submitter: HTMLElement;
@@ -25,8 +30,8 @@ export interface Prefs {
 export type ConvertedParam = string | boolean | number | {} | [] | null | undefined;
 
 declare const prefs: Prefs;
-declare const path: Writable<ConvertedParam[]>;
-declare const query: Writable<{ [key: string]: ConvertedParam }>;
+declare const path: Parsable<ConvertedParam[]>;
+declare const query: Parsable<{ [key: string]: ConvertedParam }>;
 declare const fragment: Writable<string>;
 declare const state: Writable<{ [key: string]: any }>;
 declare const url: Readable<string>;
