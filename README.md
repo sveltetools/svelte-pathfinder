@@ -39,7 +39,7 @@ CDN: [UNPKG](https://unpkg.com/svelte-pathfinder/) | [jsDelivr](https://cdn.jsde
 
 ## API
 
-### Stores (instances)
+### Stores
 
 - `path` - represents path segments of the URL as an array.
 

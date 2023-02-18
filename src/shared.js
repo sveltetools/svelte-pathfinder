@@ -178,9 +178,9 @@ export function parseParams(
 
 	const matches = new RegExp(rgx, flags).exec(path);
 
-	if (!matches || !matches.groups) return [null, pos];
+	if (!matches) return [null, pos];
 
-	const params = Object.entries(matches.groups).reduce((params, [key, val]) => {
+	const params = Object.entries(matches.groups || {}).reduce((params, [key, val]) => {
 		const value = decode(val);
 		params[key] = prefs.convertTypes ? convertType(value) : value;
 		return params;
