@@ -85,7 +85,6 @@ if (sideEffect) {
 
 		cleanup.add(
 			listenEvent('popstate', (e) => {
-				console.log('popstate');
 				if (!prefs.sideEffect) return;
 				popstate = true;
 				goto(location.href, e.state);
@@ -94,7 +93,6 @@ if (sideEffect) {
 	} else {
 		cleanup.add(
 			listenEvent('hashchange', () => {
-				console.log('hashchange');
 				if (!prefs.sideEffect) return;
 				prefs.hashbang || useHashbang ? goto(location.hash) : fragment.set(location.hash);
 			})
