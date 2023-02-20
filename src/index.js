@@ -4,9 +4,11 @@ import { derived, writable } from 'svelte/store';
 import {
 	prependPrefix,
 	specialLinks,
+	hasPushState,
 	useHashbang,
 	parseParams,
 	getLocation,
+	listenEvent,
 	hasProcess,
 	sideEffect,
 	getShortURL,
@@ -17,7 +19,7 @@ import {
 	prefs,
 } from './shared';
 
-import { pathStore, queryStore, createParamStore } from './stores';
+import { pathStore, queryStore, fragmentStore, createParamStore } from './stores';
 
 const pathname = getPath();
 const search = getLocation().search;
@@ -31,13 +33,7 @@ const path = pathStore(pathname);
 
 const query = queryStore(search);
 
-const fragment = writable(hash, (set) => {
-	const handler = () =>
-		prefs.hashbang || useHashbang ? goto(location.hash) : set(location.hash);
-	sideEffect && prefs.sideEffect && window.addEventListener('hashchange', handler);
-	return () =>
-		sideEffect && prefs.sideEffect && window.removeEventListener('hashchange', handler);
-});
+const fragment = fragmentStore(hash);
 
 const state = writable({});
 
@@ -48,7 +44,7 @@ const url = derived(
 
 		tick().then(() => {
 			if (skip) return;
-			set($path.toString() + $query.toString() + prependPrefix($fragment.toString(), '#'));
+			set(`${$path}${$query}${$fragment ? prependPrefix($fragment, '#') : ''}`);
 		});
 
 		return () => (skip = true);
@@ -62,24 +58,62 @@ const pattern = derived(path, ($path) => (...args) => {
 });
 
 if (sideEffect) {
-	url.subscribe(($url) => {
-		if (!prefs.sideEffect) return;
-		if (popstate) return (popstate = false);
-		history[replace ? 'replaceState' : 'pushState']({}, null, getFullURL($url));
-		!replace && len++;
-		replace = false;
-	});
+	const cleanup = new Set();
 
-	state.subscribe(($state) => {
-		if (!prefs.sideEffect) return;
-		history.replaceState($state, null, location.pathname + location.search + location.hash);
-	});
+	cleanup.add(
+		url.subscribe(($url) => {
+			if (!prefs.sideEffect) return;
+			if (popstate) return (popstate = false);
+			if (hasPushState) {
+				history[replace ? 'replaceState' : 'pushState']({}, null, getFullURL($url));
+			} else {
+				location.hash = getFullURL($url);
+			}
+			!replace && len++;
+			replace = false;
+		})
+	);
 
-	window.addEventListener('popstate', (e) => {
-		if (!prefs.sideEffect) return;
-		popstate = true;
-		goto(location.href, e.state);
-	});
+	if (hasPushState) {
+		cleanup.add(
+			state.subscribe(($state) => {
+				if (!prefs.sideEffect) return;
+				history.replaceState(
+					$state,
+					null,
+					location.pathname + location.search + location.hash
+				);
+			})
+		);
+
+		cleanup.add(
+			listenEvent('popstate', (e) => {
+				console.log('popstate');
+				if (!prefs.sideEffect) return;
+				popstate = true;
+				goto(location.href, e.state);
+			})
+		);
+	} else {
+		cleanup.add(
+			listenEvent('hashchange', () => {
+				console.log('hashchange');
+				if (!prefs.sideEffect) return;
+				prefs.hashbang || useHashbang ? goto(location.hash) : fragment.set(location.hash);
+			})
+		);
+	}
+
+	cleanup.add(
+		listenEvent(
+			'unload',
+			() => {
+				cleanup.forEach((off) => off());
+				cleanup.clear();
+			},
+			true
+		)
+	);
 }
 
 function goto(url = '', data) {

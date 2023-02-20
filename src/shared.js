@@ -190,16 +190,21 @@ export function parseParams(
 }
 
 export function prependPrefix(str, pfx = '/') {
-	return str[0] !== pfx ? pfx + str : str;
+	return (str + '').indexOf(pfx) !== 0 ? pfx + str : str;
 }
 
 export function trimPrefix(str, pfx) {
-	return str.indexOf(pfx) === 0 ? str.substring(pfx.length) : str;
+	return (str + '').indexOf(pfx) === 0 ? str.substring(pfx.length) : str;
 }
 
 export function shallowCopy(value) {
 	if (typeof value !== 'object' || value === null) return value;
-	return Array.isArray(value) ? [...value] : { ...value };
+	return Object.create(Object.getPrototypeOf(value), Object.getOwnPropertyDescriptors(value));
+}
+
+export function listenEvent(...args) {
+	window.addEventListener(...args);
+	return () => window.removeEventListener(...args);
 }
 
 function convertType(val) {

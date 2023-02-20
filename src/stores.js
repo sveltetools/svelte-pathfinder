@@ -9,29 +9,33 @@ import {
 	shallowCopy,
 } from './shared';
 
-export const pathStore = createStore((path) => {
-	return typeof path === 'string'
-		? Object.defineProperty(trimPrefix(path, '/').split('/'), 'toString', {
+export const pathStore = createStore(($path, $prev) => {
+	if ($prev && $path.toString() === $prev.toString()) return $prev;
+
+	return typeof $path === 'string'
+		? Object.defineProperty(trimPrefix($path, '/').split('/'), 'toString', {
 				value() {
 					return prependPrefix(this.join('/'));
 				},
 				configurable: false,
 				writable: false,
 		  })
-		: path;
+		: $path;
 });
 
-export const queryStore = createStore((query) => {
-	return typeof query === 'string'
-		? Object.defineProperty(parseQuery(query), 'toString', {
+export const queryStore = createStore(($query) => {
+	return typeof $query === 'string'
+		? Object.defineProperty(parseQuery($query), 'toString', {
 				value() {
 					return stringifyQuery(this);
 				},
 				configurable: false,
 				writable: false,
 		  })
-		: query;
+		: $query;
 });
+
+export const fragmentStore = createStore(($fragment) => trimPrefix($fragment, '#'));
 
 export function createParamStore(path) {
 	return (pattern, options) => {
@@ -88,14 +92,21 @@ export function createParamStore(path) {
 	};
 }
 
-function createStore(create) {
+function createStore(normalize, start) {
 	return (value) => {
-		const { subscribe, update, set } = writable(create(value));
-
+		const { subscribe, set } = writable(normalize(value), start);
 		return {
 			subscribe,
-			update: (reducer) => update((value) => create(reducer(value))),
-			set: (value) => set(create(value)),
+			update(reducer) {
+				const prevValue = get(this);
+				value = normalize(reducer(shallowCopy(prevValue)), prevValue);
+				if (value !== prevValue) set(value);
+			},
+			set(value) {
+				const prevValue = get(this);
+				value = normalize(value, prevValue);
+				if (value !== prevValue) set(value);
+			},
 		};
 	};
 }

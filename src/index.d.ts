@@ -27,7 +27,14 @@ export interface Prefs {
     sideEffect: boolean;
 }
 
-export type ConvertedParam = string | boolean | number | {} | [] | null | undefined;
+export type ConvertedParam =
+    | string
+    | boolean
+    | number
+    | {}
+    | []
+    | null
+    | undefined;
 
 declare const prefs: Prefs;
 declare const path: Parsable<ConvertedParam[]>;
