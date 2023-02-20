@@ -12,6 +12,7 @@ export interface SubmitEvent extends Event {
 export interface ParseParamsOptions {
     loose?: boolean;
     sensitive?: boolean;
+    blank?: boolean;
     decode?: typeof decodeURIComponent;
 }
 
