@@ -52,10 +52,7 @@ const url = derived(
 	pathname + search + hash
 );
 
-const pattern = derived(path, ($path) => (...args) => {
-	const [params] = parseParams($path.toString(), ...args);
-	return params;
-});
+const pattern = derived(path, ($path) => parseParams.bind(null, $path.toString()));
 
 if (sideEffect) {
 	const cleanup = new Set();

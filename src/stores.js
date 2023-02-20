@@ -2,11 +2,12 @@ import { writable, get } from 'svelte/store';
 
 import {
 	stringifyQuery,
-	parseQuery,
-	parseParams,
-	trimPrefix,
 	prependPrefix,
+	injectParams,
+	parseParams,
+	parseQuery,
 	shallowCopy,
+	trimPrefix,
 } from './shared';
 
 export const pathStore = createStore(($path, $prev) => {
@@ -38,53 +39,28 @@ export const queryStore = createStore(($query) => {
 export const fragmentStore = createStore(($fragment) => trimPrefix($fragment, '#'));
 
 export function createParamStore(path) {
-	return (pattern, options) => {
-		let parsedParams;
-		let paramPositions;
+	return (pattern, options = {}) => {
+		let params;
 
 		const { subscribe } = writable({}, (set) => {
 			return path.subscribe(($path) => {
-				[parsedParams, paramPositions] = parseParams($path.toString(), pattern, options);
-				if (!parsedParams) parsedParams = blankParams(paramPositions);
-				set(shallowCopy(parsedParams));
+				params = parseParams($path.toString(), pattern, { blank: true, ...options });
+				set(shallowCopy(params));
 			});
 		});
 
 		function set(value = {}) {
-			const patchParams = Object.entries(value).reduce((patch, [key, val]) => {
-				if (val !== parsedParams[key]) {
-					patch.push([val, paramPositions.indexOf(key)]);
-				}
-				return patch;
-			}, []);
-
-			if (patchParams.length) {
-				path.update(($path) => {
-					patchParams.forEach(([param, i]) => {
-						if (typeof param === 'undefined') {
-							delete $path[i];
-						} else {
-							$path[i] = param;
-						}
-					});
-					return $path;
-				});
+			if (Object.entries(params).some(([key, val]) => val !== value[key])) {
+				path.set(injectParams(pattern, value));
 			}
-		}
-
-		function blankParams(keys = []) {
-			return (keys || []).reduce((params, key) => {
-				if (key) params[key] = undefined;
-				return params;
-			}, {});
 		}
 
 		return {
 			get() {
 				return get(this);
 			},
-			update(reducer) {
-				set(reducer(shallowCopy(get(this))));
+			update(fn) {
+				set(fn(this.get()));
 			},
 			subscribe,
 			set,
@@ -95,17 +71,20 @@ export function createParamStore(path) {
 function createStore(normalize, start) {
 	return (value) => {
 		const { subscribe, set } = writable(normalize(value), start);
+
+		function _set(value, prevValue) {
+			value = normalize(value, prevValue);
+			if (value !== prevValue) set(value);
+		}
+
 		return {
 			subscribe,
-			update(reducer) {
-				const prevValue = get(this);
-				value = normalize(reducer(shallowCopy(prevValue)), prevValue);
-				if (value !== prevValue) set(value);
+			update(fn) {
+				const value = get(this);
+				_set(fn(shallowCopy(value)), value);
 			},
 			set(value) {
-				const prevValue = get(this);
-				value = normalize(value, prevValue);
-				if (value !== prevValue) set(value);
+				_set(value, get(this));
 			},
 		};
 	};

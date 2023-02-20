@@ -138,17 +138,24 @@ export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 	return qs ? `?${qs}` : '';
 }
 
+export function injectParams(pattern, params) {
+	return pattern.replace(/(\/|^)([:*][^/]*?)(\?)?(?=[/.]|$)/g, (param, _, key) => {
+		param = params[key === '*' ? 'wild' : key.substring(1)];
+		return param ? '/' + param : '';
+	});
+}
+
 export function parseParams(
 	path = '',
 	pattern = '*',
-	{ loose = false, sensitive = false, decode = decodeURIComponent } = {}
+	{ loose = false, sensitive = false, blank = false, decode = decodeURIComponent } = {}
 ) {
-	const pos = [];
+	const blanks = {};
 	const rgx = pattern.split('/').reduce((rgx, seg, i, { length }) => {
 		if (seg) {
 			const pfx = seg[0];
 			if (pfx === '*') {
-				pos.push('wild');
+				blanks['wild'] = undefined;
 				rgx += '/(?<wild>.*)';
 			} else if (pfx === ':') {
 				const opt = seg.indexOf('?', 1);
@@ -157,12 +164,11 @@ export function parseParams(
 				const isExt = !!~ext;
 
 				const key = seg.substring(1, isOpt ? opt : isExt ? ext : seg.length);
-				pos.push(key);
+				blanks[key] = undefined;
 
 				rgx += isOpt && !isExt ? '(?:/(?<' + key + '>[^/]+?))?' : '/(?<' + key + '>[^/]+?)';
 				if (isExt) rgx += (isOpt ? '?' : '') + '\\' + seg.substring(ext);
 			} else {
-				pos.push(null);
 				rgx += '/' + seg;
 			}
 		}
@@ -175,18 +181,17 @@ export function parseParams(
 	}, '^');
 
 	const flags = sensitive ? '' : 'i';
-
 	const matches = new RegExp(rgx, flags).exec(path);
 
-	if (!matches) return [null, pos];
-
-	const params = Object.entries(matches.groups || {}).reduce((params, [key, val]) => {
-		const value = decode(val);
-		params[key] = prefs.convertTypes ? convertType(value) : value;
-		return params;
-	}, {});
-
-	return [params, pos];
+	return matches
+		? Object.entries(matches.groups || {}).reduce((params, [key, val]) => {
+				const value = decode(val);
+				params[key] = prefs.convertTypes ? convertType(value) : value;
+				return params;
+		  }, {})
+		: blank
+		? blanks
+		: null;
 }
 
 export function prependPrefix(str, pfx = '/') {
