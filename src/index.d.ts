@@ -37,39 +37,23 @@ export type ConvertedParam =
     | null
     | undefined;
 
-declare const prefs: Prefs;
-declare const path: Parsable<ConvertedParam[]>;
-declare const query: Parsable<{ [key: string]: ConvertedParam }>;
-declare const fragment: Writable<string>;
-declare const state: Writable<{ [key: string]: any }>;
-declare const url: Readable<string>;
-declare const pattern: Readable<
+export declare const prefs: Prefs;
+export declare const path: Parsable<ConvertedParam[]>;
+export declare const query: Parsable<{ [key: string]: ConvertedParam }>;
+export declare const fragment: Writable<string>;
+export declare const state: Writable<{ [key: string]: any }>;
+export declare const url: Readable<string>;
+export declare const pattern: Readable<
     <T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null
 >;
 
-declare function goto(url?: string, data?: {}): void;
-declare function redirect(url?: string, data?: {}): void;
-declare function back(pathname?: string): void;
-declare function click(e: MouseEvent): void;
-declare function submit(e: SubmitEvent): void;
+export declare function goto(url?: string, data?: {}): void;
+export declare function redirect(url?: string, data?: {}): void;
+export declare function back(pathname?: string): void;
+export declare function click(e: MouseEvent): void;
+export declare function submit(e: SubmitEvent): void;
 
-declare function paramable<T extends {}>(
+export declare function paramable<T extends {}>(
     pattern?: string,
     options?: ParseParamsOptions
 ): Writable<T>;
-
-export {
-    paramable,
-    redirect,
-    fragment,
-    pattern,
-    submit,
-    click,
-    prefs,
-    state,
-    query,
-    path,
-    back,
-    goto,
-    url,
-};
