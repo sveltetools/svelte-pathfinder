@@ -17,7 +17,7 @@ import {
 	getPath,
 	closest,
 	prefs,
-} from './shared';
+} from './utils';
 
 import { pathStore, queryStore, fragmentStore, createParamStore } from './stores';
 

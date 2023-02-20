@@ -8,7 +8,7 @@ import {
 	parseQuery,
 	shallowCopy,
 	trimPrefix,
-} from './shared';
+} from './utils';
 
 export function pathStore(value = '') {
 	let pathString = value.toString();
