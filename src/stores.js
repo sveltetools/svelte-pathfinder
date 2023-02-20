@@ -10,23 +10,48 @@ import {
 	trimPrefix,
 } from './shared';
 
-export const pathStore = createStore(($path, $prev) => {
-	if ($prev && $path.toString() === $prev.toString()) return $prev;
+export function pathStore(value = '') {
+	let pathString = value.toString();
 
-	return typeof $path === 'string'
-		? Object.defineProperty(trimPrefix($path, '/').split('/'), 'toString', {
-				value() {
-					return prependPrefix(this.join('/'));
-				},
-				configurable: false,
-				writable: false,
-		  })
-		: $path;
-});
+	function normalize($path) {
+		if (typeof $path === 'string') $path = trimPrefix($path, '/').split('/');
 
-export const queryStore = createStore(($query) => {
-	return typeof $query === 'string'
-		? Object.defineProperty(parseQuery($query), 'toString', {
+		return !Object.prototype.hasOwnProperty.call($path, 'toString')
+			? Object.defineProperty($path, 'toString', {
+					value() {
+						return prependPrefix(this.join('/'));
+					},
+					configurable: false,
+					writable: false,
+			  })
+			: $path;
+	}
+
+	const { subscribe, set } = writable(normalize(value));
+
+	function _set(value) {
+		value = normalize(value);
+		if (value.toString() !== pathString) {
+			pathString = value.toString();
+			set(value);
+		}
+	}
+
+	return {
+		subscribe,
+		update(fn) {
+			_set(fn(get(this)));
+		},
+		set(value) {
+			_set(value);
+		},
+	};
+}
+
+export const queryStore = createInvariantStore(($query) => {
+	if (typeof $query === 'string') $query = parseQuery($query);
+	return !Object.prototype.hasOwnProperty.call($query, 'toString')
+		? Object.defineProperty($query, 'toString', {
 				value() {
 					return stringifyQuery(this);
 				},
@@ -36,7 +61,7 @@ export const queryStore = createStore(($query) => {
 		: $query;
 });
 
-export const fragmentStore = createStore(($fragment) => trimPrefix($fragment, '#'));
+export const fragmentStore = createInvariantStore(($fragment) => trimPrefix($fragment, '#'));
 
 export function createParamStore(path) {
 	return (pattern, options = {}) => {
@@ -68,24 +93,14 @@ export function createParamStore(path) {
 	};
 }
 
-function createStore(normalize, start) {
+function createInvariantStore(normalize) {
 	return (value) => {
-		const { subscribe, set } = writable(normalize(value), start);
-
-		function _set(value, prevValue) {
-			value = normalize(value, prevValue);
-			if (value !== prevValue) set(value);
-		}
+		const { subscribe, update, set } = writable(normalize(value));
 
 		return {
 			subscribe,
-			update(fn) {
-				const value = get(this);
-				_set(fn(shallowCopy(value)), value);
-			},
-			set(value) {
-				_set(value, get(this));
-			},
+			update: (fn) => update((value) => normalize(fn(value))),
+			set: (value) => set(normalize(value)),
 		};
 	};
 }
