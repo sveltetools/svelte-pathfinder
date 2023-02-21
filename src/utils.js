@@ -138,10 +138,10 @@ export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 	return qs ? `?${qs}` : '';
 }
 
-export function injectParams(pattern, params) {
+export function injectParams(pattern, params, { encode = encodeURIComponent } = {}) {
 	return pattern.replace(/(\/|^)([:*][^/]*?)(\?)?(?=[/.]|$)/g, (param, _, key) => {
 		param = params[key === '*' ? 'wild' : key.substring(1)];
-		return param ? '/' + param : '';
+		return param ? '/' + encode(param) : '';
 	});
 }
 

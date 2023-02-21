@@ -10,43 +10,18 @@ import {
 	trimPrefix,
 } from './utils';
 
-export function pathStore(value = '') {
-	let pathString = value.toString();
-
-	function normalize($path) {
-		if (typeof $path === 'string') $path = trimPrefix($path, '/').split('/');
-
-		return !Object.prototype.hasOwnProperty.call($path, 'toString')
-			? Object.defineProperty($path, 'toString', {
-					value() {
-						return prependPrefix(this.join('/'));
-					},
-					configurable: false,
-					writable: false,
-			  })
-			: $path;
-	}
-
-	const { subscribe, set } = writable(normalize(value));
-
-	function _set(value) {
-		value = normalize(value);
-		if (value.toString() !== pathString) {
-			pathString = value.toString();
-			set(value);
-		}
-	}
-
-	return {
-		subscribe,
-		update(fn) {
-			_set(fn(get(this)));
-		},
-		set(value) {
-			_set(value);
-		},
-	};
-}
+export const pathStore = createInvariantStore(($path) => {
+	if (typeof $path === 'string') $path = trimPrefix($path, '/').split('/');
+	return !Object.prototype.hasOwnProperty.call($path, 'toString')
+		? Object.defineProperty($path, 'toString', {
+				value() {
+					return prependPrefix(this.join('/'));
+				},
+				configurable: false,
+				writable: false,
+		  })
+		: $path;
+});
 
 export const queryStore = createInvariantStore(($query) => {
 	if (typeof $query === 'string') $query = parseQuery($query);
@@ -67,6 +42,8 @@ export function createParamStore(path) {
 	return (pattern, options = {}) => {
 		let params;
 
+		pattern = pattern.replace(/\/$/, '');
+
 		const { subscribe } = writable({}, (set) => {
 			return path.subscribe(($path) => {
 				params = parseParams($path.toString(), pattern, { blank: true, ...options });
@@ -76,7 +53,12 @@ export function createParamStore(path) {
 
 		function set(value = {}) {
 			if (Object.entries(params).some(([key, val]) => val !== value[key])) {
-				path.set(injectParams(pattern, value));
+				path.update(($path) => {
+					const tail = options.loose
+						? prependPrefix($path.slice(pattern.split('/').length - 1).join('/'))
+						: '';
+					return injectParams(pattern + tail, value);
+				});
 			}
 		}
 
@@ -95,12 +77,26 @@ export function createParamStore(path) {
 
 function createInvariantStore(normalize) {
 	return (value) => {
-		const { subscribe, update, set } = writable(normalize(value));
+		let serialized = value.toString();
+
+		const { subscribe, set } = writable(normalize(value));
+
+		function update(value) {
+			value = normalize(value);
+			if (value.toString() !== serialized) {
+				serialized = value.toString();
+				set(value);
+			}
+		}
 
 		return {
 			subscribe,
-			update: (fn) => update((value) => normalize(fn(value))),
-			set: (value) => set(normalize(value)),
+			update(fn) {
+				update(fn(get(this)));
+			},
+			set(value) {
+				update(value);
+			},
 		};
 	};
 }
