@@ -7,8 +7,8 @@ A completely different approach of routing. State-based router suggests that rou
 ## 💡 Features
 
 - Zero-config! 
-- Just another global state. Ultimate freedom how to apply this state to your app! 🏆 
-- Juggling of different parts of URL (path/query/hash) effective and granularly. 🪄 
+- Just another global state. Ultimate freedom how to apply this state to your app! 
+- Juggling of different parts of URL (path/query/hash) effective and granularly. 
 - Automatic parsing of the `query` params, optional parsing `path` params.
 - Helpers to work with navigation, links, and even html forms.
 
