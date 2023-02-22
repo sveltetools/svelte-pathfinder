@@ -4,16 +4,17 @@
 
 A completely different approach of routing. State-based router suggests that routing is just another global state and History API changes are just an optional side-effects of this state.
 
-## Features
+## 💡 Features
 
-- Zero-config.
-- Just another global state.
-- It doesn't impose any restrictions on how to apply this state to the application.
-- Manipulate different parts of a state (path/query/hash) separately.
+- Zero-config! 
+- Just another global state. Ultimate freedom how to apply this state to your app! 🏆 
+- Juggling of different parts of URL (path/query/hash) effective and granularly. 🪄 
 - Automatic parsing of the `query` params, optional parsing `path` params.
-- Helpers to work with navigation, links, and even forms.
+- Helpers to work with navigation, links, and even html forms.
 
-## Install
+![preview](https://user-images.githubusercontent.com/4378873/220714832-e1aefab3-7cfa-4f4a-9a02-3e280257388c.png)
+
+## 📦 Install
 
 ```bash
 npm i svelte-pathfinder --save-dev
@@ -33,51 +34,51 @@ CDN: [UNPKG](https://unpkg.com/svelte-pathfinder/) | [jsDelivr](https://cdn.jsde
 <script type="module" src="https://unpkg.com/svelte-pathfinder/dist/pathfinder.min.mjs"></script>
 ```
 
-## URL schema to state
+## 📌 URL schema
 
 **/path**?*query*`#fragment`
 
-## API
+## 🤖 API
 
 ### Stores
 
-- `path` - represents path segments of the URL as an array.
+`path` - represents path segments of the URL as an array.
 
 ```javascript
 path: Writable<[]>
 ```
 
-- `query` - represents query params of the URL as an object.
+`query` - represents query params of the URL as an object.
 
 ```javascript
 query: Writable<{}>
 ```
 
-- `fragment` - represents fragment (hash) string of URL.
+`fragment` - represents fragment (hash) string of URL.
 
 ```javascript
 fragment: Writable<string>
 ```
 
-- `state` - represents state object associated with the new history entry created by pushState().
+`state` - represents state object associated with the new history entry created by pushState().
 
 ```javascript
 state: Writable<{}>
 ```
 
-- `url` - represents full URL string.
+`url` - represents full URL string.
 
 ```javascript
 url: Readable<string>
 ```
 
-- `pattern` - function to match path patterns and return read-only `params` object or `null`.
+`pattern` - function to match path patterns and return read-only `params` object or `null`.
 
 ```javascript
 pattern: Readable<<T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null>
 ```
 
-- `paramable` - constructor of custom `params` stores to parse path patterns and manipulate path parameters.
+`paramable` - constructor of custom `params` stores to parse path patterns and manipulate path parameters.
 
 ```javascript
 paramable: <T extends {}>(pattern?: string, options?: ParseParamsOptions): Writable<T>;
@@ -85,31 +86,31 @@ paramable: <T extends {}>(pattern?: string, options?: ParseParamsOptions): Writa
 
 ### Helpers
 
-- `goto` - perform navigation to the next router state by URL.
+`goto` - perform navigation to the next router state by URL.
 
 ```javascript
 goto(url: String, state?: Object);
 ```
 
-- `back` - perform navigation to the previous router state.
+`back` - perform navigation to the previous router state.
 
 ```javascript
 back(path?: String)
 ```
 
-- `redirect` - update current url without new history record.
+`redirect` - update current url without new history record.
 
 ```javascript
 redirect(url: String, state?: Object)
 ```
 
-- `click` - handle click event from the link and perform navigation to its targets.
+`click` - handle click event from the link and perform navigation to its targets.
 
 ```javascript
 click(event: MouseEvent)
 ```
 
-- `submit` - handle submit event from the GET-form and perform navigation using its inputs.
+`submit` - handle submit event from the GET-form and perform navigation using its inputs.
 
 ```javascript
 submit(event: SubmitEvent)
@@ -135,7 +136,7 @@ prefs.convertTypes = false;
 prefs.array.format = 'separator';
 ```
 
-## Usage
+## 🕹 Usage
 
 ### Changing markup related to the router state
 
@@ -188,7 +189,7 @@ prefs.array.format = 'separator';
     ...
     $path[1] = 4; // set second segment of the path, e.g. /products/4
     ...
-    $fragment = '#login'; // set url hash to #login 
+    $fragment = 'login'; // set url hash to #login 
     ...
     $state = { restoreOnBack: 'something' }; // set history record related state object
 </script>
@@ -199,7 +200,7 @@ prefs.array.format = 'separator';
 ```svelte
 <input bind:value={$query.q} placeholder="Search product...">
 ...
-<button on:click={() => $fragment = '#login'}>Login</button>
+<button on:click={() => $fragment = 'login'}>Login</button>
 ...
 <a href="/products/{product.id}" on:click|preventDefault={e => $path[1] = product.id}>
     {product.title}
@@ -246,6 +247,7 @@ import { path, query } from 'svelte-pathfinder';
  import { productPageParams } from './store/params';
 
 // with regular derived store
+
 export const productData = derived(productPageParams, ($params, set) => {
     if ($params.productId}) {
         fetch(`/api/products/${$params.productId}`)
@@ -255,8 +257,9 @@ export const productData = derived(productPageParams, ($params, set) => {
 }, {});
 
 // with svelte-asyncable
+
 export const productsList = asyncable(async $query => {
-    const res = await fetch(`/api/products${$query.toString()}`)
+    const res = await fetch(`/api/products${$query}`)
     return res.json();
 }, undefined, [ query ]);
 
@@ -269,6 +272,8 @@ Auto-handling all links in the application.
 ```svelte
 <svelte:window on:click={click} />
 
+<!-- links below will be handled by `click` helper -->
+
 <nav class="navigate">
     <a href="/">Home</a>
     <a href="/products">Products</a>
@@ -276,6 +281,7 @@ Auto-handling all links in the application.
 </nav>
 
 <!-- links below will be excluded from the navigation -->
+
 <nav class="not-navigate">
     <a href="http://google.com">External link</a>
     <a href="/products" target="_blank">Open in new window</a>
@@ -332,7 +338,9 @@ Auto-handling all links in the application.
 </script>
 ```
 
-## Optional side-effect (changing browser history and URL)
+## 🚩 Assumptions
+
+### Optional side-effect (changing browser history and URL)
 
 Router will automatically perform `pushState` to browser History API and listening `popstate` event if the following conditions are valid:
 
@@ -342,7 +350,7 @@ Router will automatically perform `pushState` to browser History API and listeni
 
 If any condition is not applicable, the router will work properly but without side-effect (changing URL).
 
-## `hashbang` routing (`#!`)
+### `hashbang` routing (`#!`)
 
 Router will automatically switch to `hashbang` routing in the following conditions:
 
@@ -350,6 +358,6 @@ Router will automatically switch to `hashbang` routing in the following conditio
 * web app has launched under `file:` protocol.
 * initial path contain exact file name with extension.
 
-## License
+## © License
 
 MIT &copy; [PaulMaly](https://github.com/PaulMaly)
