@@ -36,7 +36,7 @@ CDN: [UNPKG](https://unpkg.com/svelte-pathfinder/) | [jsDelivr](https://cdn.jsde
 
 ## 📌 URL schema
 
-**/path**?*query*`#fragment`
+`/path`?`query`#`fragment`
 
 ## 🤖 API
 
