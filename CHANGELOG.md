@@ -6,6 +6,9 @@
 * (breacking change): Now `pattern` store directly return read-only `params` object if pattern was matched or `null` if not. Please, check an examples in README.
 * New `paramable` custom store constructor is provided to create separate `params` stores for each of possible path patterns to manipulate path parameters in ultimate  flexible manner.
 
+#### Migration guide: 
+![migration](https://user-images.githubusercontent.com/4378873/221018183-678c16fc-e940-43b4-ab4e-413fa77af881.png)
+
 
 # 3.4.0
 * Make updating of `query` and `fragment` parts of URL state in the next tick to prevent unnecessary executions of listeners when transitioning between paths.
