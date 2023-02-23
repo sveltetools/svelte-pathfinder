@@ -1,10 +1,10 @@
 # svelte-pathfinder changelog
 
 # 4.0.0
-* (breacking change): Now `path` store contains just an array of path segments and doesn't contain `params` field anymore. Please, check examples of `path` store and `paramable` custom store constructor to manipulate parameters.
-* (breacking change): Now `query` store contains just a object of query string parameters and doesn't contain `params` field anymore. Please, check examples of `query` store.
-* (breacking change): Now `pattern` store directly return read-only `params` object if pattern was matched or `null` if not. Please, check an examples in README.
-* New `paramable` custom store constructor is provided to create separate `params` stores for each of possible path patterns to manipulate path parameters in ultimate  flexible manner.
+* (breaking change): Now `path` store contains just an array of path segments and doesn't contain `params` field anymore. Please, check examples of `path` store and `paramable` custom store constructor to manipulate parameters.
+* (breaking change): Now `query` store contains just an object of query string parameters and doesn't contain `params` field anymore. Please, check examples of `query` store.
+* (breaking change): Now `pattern` store directly returns read-only `params` object if pattern was matched or `null` if not. Please, check examples in README.
+* New `paramable` custom store constructor is provided to create separate `params` stores for each of possible path patterns to manipulate path parameters in ultimate flexible manner.
 
 #### Migration guide: 
 ![migration](https://user-images.githubusercontent.com/4378873/221018183-678c16fc-e940-43b4-ab4e-413fa77af881.png)
