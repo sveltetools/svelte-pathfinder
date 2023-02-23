@@ -89,19 +89,19 @@ paramable: <T extends {}>(pattern?: string, options?: ParseParamsOptions): Writa
 `goto` - perform navigation to the next router state by URL.
 
 ```javascript
-goto(url: String, state?: Object);
+goto(url: string, state?: {});
 ```
 
 `back` - perform navigation to the previous router state.
 
 ```javascript
-back(path?: String)
+back(path?: string)
 ```
 
 `redirect` - update current url without new history record.
 
 ```javascript
-redirect(url: String, state?: Object)
+redirect(url: string, state?: {})
 ```
 
 `click` - handle click event from the link and perform navigation to its targets.
