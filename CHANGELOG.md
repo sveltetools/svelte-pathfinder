@@ -1,5 +1,11 @@
 # svelte-pathfinder changelog
 
+# 4.1.2
+* add missed files.
+
+# 4.1.1
+* fix back helper bug using href="#<hash>" navigation.
+
 # 4.1.0
 * better SSR support.
 * extended support for special links in `click` helper (eg. blob:, data:, etc.)
