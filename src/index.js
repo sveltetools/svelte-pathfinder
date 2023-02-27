@@ -59,13 +59,13 @@ if (sideEffect) {
 	cleanup.add(
 		url.subscribe(($url) => {
 			if (!prefs.sideEffect) return;
+			!replace && len++;
 			if (popstate) return (popstate = false);
 			if (hasPushState) {
 				history[replace ? 'replaceState' : 'pushState']({}, null, getFullURL($url));
 			} else {
 				location.hash = getFullURL($url);
 			}
-			!replace && len++;
 			replace = false;
 		})
 	);
@@ -123,7 +123,7 @@ function goto(url = '', data) {
 }
 
 function back(pathname = '/') {
-	if (len >= 0 && sideEffect && prefs.sideEffect) {
+	if (len > 0 && sideEffect && prefs.sideEffect) {
 		history.back();
 		len--;
 	} else {
