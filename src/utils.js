@@ -1,4 +1,5 @@
-export const specialLinks = /((mailto:\w+)|(tel:\w+)).+/;
+export const specialLinks =
+	/^((mailto:)|(tel:)|(sms:)|(data:)|(blob:)|(javascript:)|(ftp(s?):\/\/)|(file:\/\/))/;
 export const hasLocation = typeof location !== 'undefined';
 export const hasProcess = typeof process !== 'undefined';
 export const hasHistory = typeof history !== 'undefined';
@@ -27,7 +28,7 @@ export const prefs = {
 
 export function getPath() {
 	const pathname = getLocation().pathname;
-	if (!pathname) return '';
+	if (!pathname) return;
 
 	const base = getBase();
 	const path = trimPrefix(pathname, base);
@@ -62,7 +63,7 @@ export function getFullURL(url) {
 }
 
 export function getShortURL(url) {
-	url = trimPrefix(url, location.origin);
+	url = trimPrefix(url, getLocation().origin);
 
 	const base = getBase();
 	url = trimPrefix(url, base);
@@ -121,15 +122,15 @@ export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 			if (Object.prototype.hasOwnProperty.call(obj, k) && isNaN(parseInt(k, 10))) {
 				if (Array.isArray(obj[k])) {
 					if (prefs.array.format === 'separator') {
-						a.push(k + '=' + obj[k].join(prefs.array.separator));
+						a.push(`${k}=${obj[k].join(prefs.array.separator)}`);
 					} else {
-						obj[k].forEach((v) => a.push(k + '[]=' + encode(v)));
+						obj[k].forEach((v) => a.push(`${k}[]=${encode(v)}`));
 					}
 				} else if (typeof obj[k] === 'object' && obj[k] !== null) {
 					let o = parseKeys(k, obj[k]);
 					a.push(stringifyObject(o));
 				} else {
-					a.push(k + '=' + encode(obj[k]));
+					a.push(`${k}=${encode(obj[k])}`);
 				}
 			}
 			return a;
@@ -141,7 +142,7 @@ export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 export function injectParams(pattern, params, { encode = encodeURIComponent } = {}) {
 	return pattern.replace(/(\/|^)([:*][^/]*?)(\?)?(?=[/.]|$)/g, (param, _, key) => {
 		param = params[key === '*' ? 'wild' : key.substring(1)];
-		return param ? '/' + encode(param) : '';
+		return param ? `/${encode(param)}` : '';
 	});
 }
 
@@ -166,10 +167,10 @@ export function parseParams(
 				const key = seg.substring(1, isOpt ? opt : isExt ? ext : seg.length);
 				blanks[key] = undefined;
 
-				rgx += isOpt && !isExt ? '(?:/(?<' + key + '>[^/]+?))?' : '/(?<' + key + '>[^/]+?)';
-				if (isExt) rgx += (isOpt ? '?' : '') + '\\' + seg.substring(ext);
+				rgx += isOpt && !isExt ? `(?:/(?<${key}>[^/]+?))?` : `/(?<${key}>[^/]+?)`;
+				if (isExt) rgx += `${isOpt ? '?' : ''}\\${seg.substring(ext)}`;
 			} else {
-				rgx += '/' + seg;
+				rgx += `/${seg}`;
 			}
 		}
 
@@ -254,7 +255,7 @@ function parseKeys(key, val) {
 		keys.push(seg[1]);
 	}
 
-	seg && keys.push('[' + key.slice(seg.index) + ']');
+	seg && keys.push(`[${key.slice(seg.index)}]`);
 
 	return parseObject(keys, val);
 }
@@ -292,9 +293,9 @@ function stringifyObject(obj = {}, nesting = '') {
 	return Object.entries(obj)
 		.map(([key, val]) => {
 			if (typeof val === 'object') {
-				return stringifyObject(val, nesting ? nesting + `[${key}]` : key);
+				return stringifyObject(val, nesting ? `${nesting}[${key}]` : key);
 			} else {
-				return [nesting + `[${key}]`, val].join('=');
+				return `${nesting}[${key}]=${val}`;
 			}
 		})
 		.join('&');

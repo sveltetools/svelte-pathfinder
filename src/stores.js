@@ -10,7 +10,7 @@ import {
 	trimPrefix,
 } from './utils';
 
-export const pathStore = createInvariantStore(($path) => {
+export const pathable = createParsableStore(($path = '') => {
 	if (typeof $path === 'string') $path = trimPrefix($path, '/').split('/');
 	return !Object.prototype.hasOwnProperty.call($path, 'toString')
 		? Object.defineProperty($path, 'toString', {
@@ -23,7 +23,7 @@ export const pathStore = createInvariantStore(($path) => {
 		: $path;
 });
 
-export const queryStore = createInvariantStore(($query) => {
+export const queryable = createParsableStore(($query = '') => {
 	if (typeof $query === 'string') $query = parseQuery($query);
 	return !Object.prototype.hasOwnProperty.call($query, 'toString')
 		? Object.defineProperty($query, 'toString', {
@@ -36,7 +36,7 @@ export const queryStore = createInvariantStore(($query) => {
 		: $query;
 });
 
-export const fragmentStore = createInvariantStore(($fragment) => trimPrefix($fragment, '#'));
+export const fragmentable = createParsableStore(($fragment = '') => trimPrefix($fragment, '#'));
 
 export function createParamStore(path) {
 	return (pattern, options = {}) => {
@@ -75,14 +75,14 @@ export function createParamStore(path) {
 	};
 }
 
-function createInvariantStore(normalize) {
+function createParsableStore(parse) {
 	return (value) => {
-		let serialized = value.toString();
+		let serialized = value && value.toString();
 
-		const { subscribe, set } = writable(normalize(value));
+		const { subscribe, set } = writable(parse(value));
 
 		function update(value) {
-			value = normalize(value);
+			value = parse(value);
 			if (value.toString() !== serialized) {
 				serialized = value.toString();
 				set(value);

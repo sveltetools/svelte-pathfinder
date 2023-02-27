@@ -1,5 +1,13 @@
 # svelte-pathfinder changelog
 
+# 4.1.0
+* better SSR support.
+* extended support for special links in `click` helper (eg. blob:, data:, etc.)
+* code refactoring and formating.
+* fix multiple `rel` attribute values.
+* add LICENSE file.
+* fix `back` helper bug.
+
 # 4.0.0
 * (breaking change): Now `path` store contains just an array of path segments and doesn't contain `params` field anymore. Please, check examples of `path` store and `paramable` custom store constructor to manipulate parameters.
 * (breaking change): Now `query` store contains just an object of query string parameters and doesn't contain `params` field anymore. Please, check examples of `query` store.

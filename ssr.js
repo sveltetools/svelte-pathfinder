@@ -10,6 +10,8 @@ module.exports = function () {
 				delete module.constructor._pathCache[cacheKey];
 			}
 		});
+
+		return require(mod);
 	} catch (err) {
 		throw new Error("Decaching wasn't performed.");
 	}

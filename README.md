@@ -280,16 +280,20 @@ Auto-handling all links in the application.
     <a href="/about">About</a>
 </nav>
 
-<!-- links below will be excluded from the navigation -->
+<!-- links below will be EXCLUDED from the navigation -->
 
 <nav class="not-navigate">
     <a href="http://google.com">External link</a>
+    <a href="/shortlink/2hkjhrfwgsd" rel="external">Link with external rel</a>
     <a href="/products" target="_blank">Open in new window</a>
-    <a href="/path/prices.zip" download>Download pricing table</a>
     <a href="/" target="_self">Navigate with full page reload</a>
+    <a href="/path/prices.zip" download>Download pricing table</a>  
+    <a href="mailto:mail@example.com">Email me</a>
+    <a href="tel:+432423535">Phone me</a>
     <a href="/cart" on:click|preventDefault|stopPropagation={doSomething}>
         Just stop click event bubbling
     </a>
+     <a href="javascript:void(0)">Old style js links</a>
 </nav>
 
 <script>
@@ -335,6 +339,66 @@ Auto-handling all links in the application.
 
 <script>
     import { submit, query, state } from 'svelte-pathfinder';
+</script>
+```
+
+## 🔖 SSR support (highly experimental)
+
+```javascript
+require('svelte/register');
+
+const = express require('express');
+
+const app = express();
+...
+/* any other routes */
+...
+app.get('*', (req, res) => {
+    const router = require('svelte-pathfinder/ssr')();
+    const App = require('./App.svelte').default;
+
+    router.goto(req.url);
+
+    const { html, head, css } = App.render({ router });
+
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                ${head}
+                ${css}
+            </head>
+            <body>
+                ${html}
+            </body>
+        </html>
+    `);
+});
+```
+
+#### Note: right now you can't use `pathfinder` directly via imports in SSR rendered applications (like the other Svelte stores). Pass `pathfinder` instance to root component via props and use it in all components of application. For example using context:
+
+```svelte
+<!-- App.svelte -->
+<svelte:window on:click={router.click}/>
+<script>
+    import { setContext } from 'svelte';
+
+    export let router;
+    setContext('router', router);
+</script>
+```
+
+```svelte
+<!-- Nested.svelte -->
+<script>
+    import { getContext } from 'svelte';
+
+    const { path } = getContext('router');
+
+    function gotoSomething() {
+        $path = '/something';
+    }
 </script>
 ```
 

@@ -19,21 +19,20 @@ import {
 	prefs,
 } from './utils';
 
-import { pathStore, queryStore, fragmentStore, createParamStore } from './stores';
+import { pathable, queryable, fragmentable, createParamStore } from './stores';
 
 const pathname = getPath();
-const search = getLocation().search;
-const hash = getLocation().hash;
+const { search, hash } = getLocation();
 
 let popstate = true;
 let replace = false;
 let len = 0;
 
-const path = pathStore(pathname);
+const path = pathable(pathname);
 
-const query = queryStore(search);
+const query = queryable(search);
 
-const fragment = fragmentStore(hash);
+const fragment = fragmentable(hash);
 
 const state = writable({});
 
@@ -124,7 +123,7 @@ function goto(url = '', data) {
 }
 
 function back(pathname = '/') {
-	if (len > 0 && sideEffect && prefs.sideEffect) {
+	if (len >= 0 && sideEffect && prefs.sideEffect) {
 		history.back();
 		len--;
 	} else {
@@ -154,7 +153,12 @@ function click(e) {
 
 	const a = closest(e.target, 'a');
 
-	if (!a || a.target || a.hasAttribute('download') || a.getAttribute('rel') === 'external')
+	if (
+		!a ||
+		a.target ||
+		a.hasAttribute('download') ||
+		(a.hasAttribute('rel') && a.getAttribute('rel').includes('external'))
+	)
 		return;
 
 	const url = a.getAttribute('href');
@@ -203,10 +207,10 @@ function submit(e) {
 			state[element.name] = element.value;
 			continue;
 		}
-		search.push(element.name + '=' + element.value);
+		search.push(`${element.name}=${element.value}`);
 	}
 
-	let url = prependPrefix(pathname + '?' + search.join('&') + hash);
+	let url = prependPrefix(`${pathname}?${search.join('&')}${hash}`);
 
 	if (hasProcess && url.match(/^\/[a-zA-Z]:\//)) {
 		url = url.replace(/^\/[a-zA-Z]:\//, '/');

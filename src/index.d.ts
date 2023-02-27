@@ -40,7 +40,7 @@ export type ConvertedParam =
 export declare const prefs: Prefs;
 export declare const path: Parsable<ConvertedParam[]>;
 export declare const query: Parsable<{ [key: string]: ConvertedParam }>;
-export declare const fragment: Writable<string>;
+export declare const fragment: Parsable<string>;
 export declare const state: Writable<{ [key: string]: any }>;
 export declare const url: Readable<string>;
 export declare const pattern: Readable<
