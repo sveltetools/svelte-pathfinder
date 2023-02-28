@@ -376,7 +376,7 @@ app.get('*', (req, res) => {
 });
 ```
 
-#### Note: right now you can't use `pathfinder` directly via imports in SSR rendered applications (like the other Svelte stores). Pass `pathfinder` instance to root component via props and use it in all components of application. For example using context:
+> ⚠️ Note: you can't use `pathfinder` stores by just directly import it in SSR rendered applications (just like the other Svelte stores), because, in-fact, they're global to the entire server instance. To avoid it, just pass `pathfinder` instance to root component via props and use it in all components of application. For example using context:
 
 ```svelte
 <!-- App.svelte -->
