@@ -283,17 +283,18 @@ Auto-handling all links in the application.
 <!-- links below will be EXCLUDED from the navigation -->
 
 <nav class="not-navigate">
-    <a href="http://google.com">External link</a>
-    <a href="/shortlink/2hkjhrfwgsd" rel="external">Link with external rel</a>
-    <a href="/products" target="_blank">Open in new window</a>
-    <a href="/" target="_self">Navigate with full page reload</a>
-    <a href="/path/prices.zip" download>Download pricing table</a>  
-    <a href="mailto:mail@example.com">Email me</a>
-    <a href="tel:+432423535">Phone me</a>
+    <a href="http://google.com">External links</a>
+    <a href="/shortlink/2hkjhrfwgsd" rel="external">Links with external rel</a>
+    <a href="/products" target="_blank">Any links with target</a>
+    <a href="/" target="_self">Any links with target even to _self</a>
+    <a href="/path/prices.zip" download>Download links</a>  
+    <a href="mailto:mail@example.com">Mailto links</a>
+    <a href="tel:+432423535">Tel links</a>
     <a href="/cart" on:click|preventDefault|stopPropagation={doSomething}>
         Just stop click event bubbling
     </a>
-     <a href="javascript:void(0)">Old style js links</a>
+    <a href="javascript:void(0)">Old style JS links</a>
+    <a href="#hashOnly">Hash-only links</a>
 </nav>
 
 <script>

@@ -22,10 +22,14 @@ export interface Prefs {
         format: 'bracket' | 'separator';
     };
     convertTypes: boolean;
+    breakHooks: boolean;
     hashbang: boolean;
-    basePath: string;
+    anchor: boolean | ScrollIntoViewOptions;
+    scroll: boolean | ScrollIntoViewOptions;
+    focus: boolean;
     nesting: number;
     sideEffect: boolean;
+    base: string;
 }
 
 export type ConvertedParam =
@@ -47,9 +51,9 @@ export declare const pattern: Readable<
     <T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null
 >;
 
-export declare function goto(url?: string, data?: {}): void;
-export declare function redirect(url?: string, data?: {}): void;
-export declare function back(pathname?: string): void;
+export declare function goto(url?: string | URL, data?: {}): void;
+export declare function redirect(url?: string | URL, data?: {}): void;
+export declare function back(url?: string | URL): void;
 export declare function click(e: MouseEvent): void;
 export declare function submit(e: SubmitEvent): void;
 

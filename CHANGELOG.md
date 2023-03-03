@@ -1,5 +1,14 @@
 # svelte-pathfinder changelog
 
+# 4.5.0
+* (minor breaking change): `basePath` preference re-named to `base`.
+* add support of full URL fallback in `back` helper instead of only `pathname`.
+* add support of URL instance instead of only string in `goto`, `back` and `redirect` helpers.
+* better support of hash-only links within `click` helper.
+* new preferences `scroll`, `anchor` and `focus` (disabled by default) for auto-management of corresponding things. Please, read more in README.
+* introducing `hook` method of `path`, `query` and `fragment` stores to get more control before it update and possible skip this update instantly, before actual router state change. Please, check an examples.
+* new `breakHooks` preference to get control the behavior of hooks execution - should it be stopped immediately after first fail (by default) or all hooks should be performed in any case.
+
 # 4.1.2
 * add missed files.
 

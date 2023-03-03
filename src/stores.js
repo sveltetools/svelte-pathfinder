@@ -2,15 +2,18 @@ import { writable, get } from 'svelte/store';
 
 import {
 	stringifyQuery,
+	normalizeHash,
 	prependPrefix,
+	hookLauncher,
 	injectParams,
 	parseParams,
 	parseQuery,
 	shallowCopy,
 	trimPrefix,
+	isFn,
 } from './utils';
 
-export const pathable = createParsableStore(($path = '') => {
+export const pathable = createParsableStore(function path($path = '') {
 	if (typeof $path === 'string') $path = trimPrefix($path, '/').split('/');
 	return !Object.prototype.hasOwnProperty.call($path, 'toString')
 		? Object.defineProperty($path, 'toString', {
@@ -23,7 +26,7 @@ export const pathable = createParsableStore(($path = '') => {
 		: $path;
 });
 
-export const queryable = createParsableStore(($query = '') => {
+export const queryable = createParsableStore(function query($query = '') {
 	if (typeof $query === 'string') $query = parseQuery($query);
 	return !Object.prototype.hasOwnProperty.call($query, 'toString')
 		? Object.defineProperty($query, 'toString', {
@@ -36,7 +39,9 @@ export const queryable = createParsableStore(($query = '') => {
 		: $query;
 });
 
-export const fragmentable = createParsableStore(($fragment = '') => trimPrefix($fragment, '#'));
+export const fragmentable = createParsableStore(function fragment($fragment = '') {
+	return normalizeHash($fragment);
+});
 
 export function createParamStore(path) {
 	return (pattern, options = {}) => {
@@ -76,18 +81,28 @@ export function createParamStore(path) {
 }
 
 function createParsableStore(parse) {
-	return (value) => {
+	return (value, cbx) => {
 		let serialized = value && value.toString();
 
-		const { subscribe, set } = writable(parse(value));
+		!Array.isArray(cbx) && (cbx = [cbx]);
 
-		function update(value) {
-			value = parse(value);
-			if (value.toString() !== serialized) {
+		const hooks = new Set(cbx);
+		const runHooks = hookLauncher(hooks);
+
+		const { subscribe, set } = writable((value = parse(value)), () => () => hooks.clear());
+
+		function update(val) {
+			value = parse(val);
+			if (
+				value.toString() !== serialized &&
+				runHooks(value, parse(serialized), parse.name) !== false
+			) {
 				serialized = value.toString();
 				set(value);
 			}
 		}
+
+		runHooks(value, null, parse.name);
 
 		return {
 			subscribe,
@@ -96,6 +111,13 @@ function createParsableStore(parse) {
 			},
 			set(value) {
 				update(value);
+			},
+			hook(cb) {
+				if (isFn(cb)) {
+					hooks.add(cb);
+					cb(value, null, parse.name);
+				}
+				return () => hooks.delete(cb);
 			},
 		};
 	};

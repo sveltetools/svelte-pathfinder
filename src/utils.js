@@ -3,7 +3,7 @@ export const specialLinks =
 export const hasLocation = typeof location !== 'undefined';
 export const hasProcess = typeof process !== 'undefined';
 export const hasHistory = typeof history !== 'undefined';
-export const hasPushState = hasHistory && typeof history.pushState === 'function';
+export const hasPushState = hasHistory && isFn(history.pushState);
 export const hasWindow = typeof window !== 'undefined';
 export const isSubWindow = hasWindow && window !== window.parent;
 export const isFileScheme =
@@ -20,10 +20,14 @@ export const prefs = {
 		format: 'bracket',
 	},
 	convertTypes: true,
+	breakHooks: true,
 	hashbang: false,
-	basePath: '',
+	anchor: false,
+	scroll: false,
+	focus: false,
 	nesting: 3,
 	sideEffect,
+	base: '',
 };
 
 export function getPath() {
@@ -51,7 +55,7 @@ export function getLocation() {
 }
 
 export function getBase() {
-	if (prefs.basePath) return prefs.basePath;
+	if (prefs.base) return prefs.base;
 	if (hasLocation && (prefs.hashbang || useHashbang)) return location.pathname;
 	return '/';
 }
@@ -84,6 +88,86 @@ export function isButton(el) {
 export function closest(el, tagName) {
 	while (el && el.nodeName.toLowerCase() !== tagName) el = el.parentNode;
 	return !el || el.nodeName.toLowerCase() !== tagName ? null : el;
+}
+
+export function setScroll(scroll, hash = '') {
+	const anchor = normalizeHash(hash);
+	if (scroll && prefs.scroll) {
+		const opts = isObj(prefs.scroll) ? { ...prefs.scroll, ...scroll } : scroll;
+		const { top = 0, left = 0 } = scroll;
+		const { scrollHeight, scrollWidth } = document.documentElement;
+
+		if (top <= scrollHeight && left <= scrollWidth) return scrollTo(opts);
+
+		const cancel = observeResize((entries) => {
+			if (!entries[0]) return cancel();
+			if (
+				(!top || entries[0].contentRect.height >= top) &&
+				(!left || entries[0].contentRect.width >= left)
+			) {
+				cancel();
+				scrollTo(opts);
+			}
+		}, document.documentElement);
+	} else if (anchor && prefs.anchor) {
+		const opts = isObj(prefs.anchor) ? prefs.anchor : {};
+		const el = document.getElementById(anchor);
+
+		if (el) return scrollTo(opts, el);
+
+		const cancel = observeDom(() => {
+			const el = document.getElementById(anchor);
+			if (el) {
+				cancel();
+				scrollTo(opts, el);
+			}
+		});
+	} else if (prefs.scroll) {
+		scrollTo();
+	}
+}
+
+export function setFocus(keepFocusId, activeElement) {
+	if (!prefs.focus) return;
+
+	setTimeout(() => {
+		const autofocus = focus();
+		if (autofocus) return autofocus.focus();
+		const cancel = observeDom(() => {
+			const autofocus = focus();
+			if (autofocus) {
+				cancel();
+				autofocus.focus();
+			}
+		});
+
+		const body = document.body;
+		const tabindex = body.getAttribute('tabindex');
+
+		body.tabIndex = -1;
+		body.focus({ preventScroll: true });
+
+		if (tabindex !== null) {
+			body.setAttribute('tabindex', tabindex);
+		} else {
+			body.removeAttribute('tabindex');
+		}
+
+		getSelection().removeAllRanges();
+	});
+
+	function focus() {
+		if (keepFocusId) {
+			return document.getElementById(keepFocusId);
+		} else if (
+			document.activeElement !== activeElement &&
+			document.activeElement !== document.body
+		) {
+			return document.activeElement;
+		} else {
+			return document.querySelector('[autofocus]');
+		}
+	}
 }
 
 export function parseQuery(str = '', { decode = decodeURIComponent } = {}) {
@@ -126,7 +210,7 @@ export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 					} else {
 						obj[k].forEach((v) => a.push(`${k}[]=${encode(v)}`));
 					}
-				} else if (typeof obj[k] === 'object' && obj[k] !== null) {
+				} else if (isObj(obj[k])) {
 					let o = parseKeys(k, obj[k]);
 					a.push(stringifyObject(o));
 				} else {
@@ -195,6 +279,10 @@ export function parseParams(
 		: null;
 }
 
+export function normalizeHash(fragment, { decode = decodeURIComponent } = {}) {
+	return trimPrefix(decode(fragment), '#');
+}
+
 export function prependPrefix(str, pfx = '/') {
 	return (str + '').indexOf(pfx) !== 0 ? pfx + str : str;
 }
@@ -203,14 +291,60 @@ export function trimPrefix(str, pfx) {
 	return (str + '').indexOf(pfx) === 0 ? str.substring(pfx.length) : str;
 }
 
+export function isObj(obj) {
+	return !Array.isArray(obj) && typeof obj === 'object' && obj !== null;
+}
+
+export function isFn(fn) {
+	return typeof fn === 'function';
+}
+
 export function shallowCopy(value) {
 	if (typeof value !== 'object' || value === null) return value;
 	return Object.create(Object.getPrototypeOf(value), Object.getOwnPropertyDescriptors(value));
 }
 
+export function hookLauncher(hooks) {
+	return (...args) => {
+		const arr = [...hooks];
+		return !(prefs.breakHooks
+			? arr.some((cb) => cb(...args) === false)
+			: arr.reduce((stop, cb) => cb(...args) === false || stop, false));
+	};
+}
+
 export function listenEvent(...args) {
 	window.addEventListener(...args);
 	return () => window.removeEventListener(...args);
+}
+
+function scrollTo({ top = 0, left = 0, ...opts } = {}, el) {
+	if (el) {
+		document.documentElement.scrollIntoView
+			? el.scrollIntoView({ behavior: 'smooth', ...opts })
+			: window.scrollTo({ top: el.offsetTop - top, behavior: 'smooth', ...opts });
+	} else {
+		window.scrollTo({ top, left, behavior: 'smooth', ...opts });
+	}
+}
+
+function observeResize(cb, el, t = 5000) {
+	const observer = new ResizeObserver(cb);
+	observer.observe(el);
+	const off = () => observer.unobserve(el);
+	setTimeout(off, t);
+	return off;
+}
+
+function observeDom(cb, t = 5000) {
+	const observer = new MutationObserver(cb);
+	observer.observe(document.body, {
+		childList: true,
+		subtree: true,
+	});
+	const off = () => observer.disconnect();
+	setTimeout(off, t);
+	return off;
 }
 
 function convertType(val) {

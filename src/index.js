@@ -8,15 +8,19 @@ import {
 	useHashbang,
 	parseParams,
 	getLocation,
+	isSubWindow,
 	listenEvent,
 	hasProcess,
 	sideEffect,
 	getShortURL,
 	getFullURL,
+	setScroll,
+	setFocus,
 	isButton,
 	getPath,
 	closest,
 	prefs,
+	isObj,
 } from './utils';
 
 import { pathable, queryable, fragmentable, createParamStore } from './stores';
@@ -24,15 +28,16 @@ import { pathable, queryable, fragmentable, createParamStore } from './stores';
 const pathname = getPath();
 const { search, hash } = getLocation();
 
-let popstate = true;
+let init = true;
+let popstate = false;
 let replace = false;
 let len = 0;
 
-const path = pathable(pathname);
+const path = pathable(pathname, before);
 
-const query = queryable(search);
+const query = queryable(search, before);
 
-const fragment = fragmentable(hash);
+const fragment = fragmentable(hash, before);
 
 const state = writable({});
 
@@ -40,7 +45,6 @@ const url = derived(
 	[path, query, fragment],
 	([$path, $query, $fragment], set) => {
 		let skip = false;
-
 		tick().then(() => {
 			if (skip) return;
 			set(`${$path}${$query}${$fragment ? prependPrefix($fragment, '#') : ''}`);
@@ -53,27 +57,50 @@ const url = derived(
 
 const pattern = derived(path, ($path) => parseParams.bind(null, $path.toString()));
 
-if (sideEffect) {
+function before() {
+	if (!prefs.scroll && !prefs.focus) return;
+	state.update(($state = {}) => {
+		prefs.scroll &&
+			($state._scroll = {
+				top: window.pageYOffset,
+				left: window.pageXOffset,
+			});
+		prefs.focus && ($state._focus = document.activeElement.id);
+		return $state;
+	});
+}
+
+function after(url, state) {
+	const anchor = url.indexOf('#') >= 0 ? url.slice(url.indexOf('#')) : '';
+	const activeElement = document.activeElement;
+	!isObj(state) && (state = {});
+	tick()
+		.then(() => setFocus(state._focus, activeElement))
+		.then(() => setScroll(state._scroll, anchor));
+}
+
+if (sideEffect || isSubWindow) {
 	const cleanup = new Set();
 
 	cleanup.add(
 		url.subscribe(($url) => {
-			if (!prefs.sideEffect) return;
-			!replace && len++;
-			if (popstate) return (popstate = false);
-			if (hasPushState) {
-				history[replace ? 'replaceState' : 'pushState']({}, null, getFullURL($url));
-			} else {
-				location.hash = getFullURL($url);
+			if (!init && !popstate && prefs.sideEffect) {
+				if (hasPushState) {
+					history[replace ? 'replaceState' : 'pushState']({}, null, getFullURL($url));
+				} else {
+					location.hash = getFullURL($url);
+				}
 			}
-			replace = false;
+			!popstate && after($url);
+			!replace && len++;
+			init = replace = popstate = false;
 		})
 	);
 
 	if (hasPushState) {
 		cleanup.add(
 			state.subscribe(($state) => {
-				if (!prefs.sideEffect) return;
+				if (init || !prefs.sideEffect) return;
 				history.replaceState(
 					$state,
 					null,
@@ -81,23 +108,23 @@ if (sideEffect) {
 				);
 			})
 		);
-
 		cleanup.add(
 			listenEvent('popstate', (e) => {
-				if (!prefs.sideEffect) return;
 				popstate = true;
 				goto(location.href, e.state);
+				after(getShortURL(location.href), e.state);
 			})
 		);
 	} else {
 		cleanup.add(
 			listenEvent('hashchange', () => {
-				if (!prefs.sideEffect) return;
-				prefs.hashbang || useHashbang ? goto(location.hash) : fragment.set(location.hash);
+				popstate = true;
+				if (!prefs.hashbang && !useHashbang) return fragment.set(location.hash);
+				goto(location.hash);
+				after(getShortURL(location.hash));
 			})
 		);
 	}
-
 	cleanup.add(
 		listenEvent(
 			'unload',
@@ -110,24 +137,23 @@ if (sideEffect) {
 	);
 }
 
-function goto(url = '', data) {
-	const { pathname, search, hash } = new URL(getShortURL(url), 'file:');
+function goto(url = '', data = {}) {
+	const { pathname, search, hash } =
+		url instanceof URL ? url : new URL(getShortURL(url), 'file:');
 
 	path.set(pathname);
+	query.set(search);
+	fragment.set(hash);
 
-	tick().then(() => {
-		query.set(search);
-		fragment.set(hash);
-		data && state.set(data);
-	});
+	tick().then(() => state.set(data || {}));
 }
 
-function back(pathname = '/') {
+function back(url) {
 	if (len > 0 && sideEffect && prefs.sideEffect) {
 		history.back();
 		len--;
 	} else {
-		tick().then(() => path.set(pathname));
+		tick().then(() => goto(url));
 	}
 }
 
@@ -160,6 +186,8 @@ function click(e) {
 		(a.hasAttribute('rel') && a.getAttribute('rel').includes('external'))
 	)
 		return;
+
+	if (!prefs.hashbang && !useHashbang && a.href.startsWith('#')) return;
 
 	const url = a.getAttribute('href');
 	if (!url || a.href.indexOf(location.origin) !== 0 || specialLinks.test(url)) return;
