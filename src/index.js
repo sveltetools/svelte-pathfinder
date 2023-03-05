@@ -187,10 +187,14 @@ function click(e) {
 	)
 		return;
 
-	if (!prefs.hashbang && !useHashbang && a.href.startsWith('#')) return;
-
 	const url = a.getAttribute('href');
-	if (!url || a.href.indexOf(location.origin) !== 0 || specialLinks.test(url)) return;
+	if (
+		!url ||
+		a.href.indexOf(location.origin) !== 0 ||
+		specialLinks.test(url) ||
+		(!prefs.hashbang && !useHashbang && url.startsWith('#'))
+	)
+		return;
 
 	e.preventDefault();
 	goto(url, Object.assign({}, a.dataset));
