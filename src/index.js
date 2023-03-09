@@ -16,10 +16,10 @@ import {
 	getFullURL,
 	setScroll,
 	setFocus,
-	isButton,
 	getPath,
 	closest,
 	prefs,
+	isBtn,
 	isObj,
 } from './utils';
 
@@ -47,7 +47,7 @@ const url = derived(
 		let skip = false;
 		tick().then(() => {
 			if (skip) return;
-			set(`${$path}${$query}${$fragment ? prependPrefix($fragment, '#') : ''}`);
+			set($path + prependPrefix($query, '?', true) + prependPrefix($fragment, '#', true));
 		});
 
 		return () => (skip = true);
@@ -204,7 +204,7 @@ function submit(e) {
 	if (!e.target || e.defaultPrevented) return;
 
 	const form = e.target;
-	const btn = e.submitter || (isButton(document.activeElement) && document.activeElement);
+	const btn = e.submitter || (isBtn(document.activeElement) && document.activeElement);
 
 	let action = form.action;
 	let method = form.method;
@@ -232,7 +232,7 @@ function submit(e) {
 		if (['checkbox', 'radio'].includes(element.type) && !element.checked) {
 			continue;
 		}
-		if (isButton(element) && element !== btn) {
+		if (isBtn(element) && element !== btn) {
 			continue;
 		}
 		if (element.type === 'hidden') {

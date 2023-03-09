@@ -76,7 +76,7 @@ export function getShortURL(url) {
 	return prependPrefix(url);
 }
 
-export function isButton(el) {
+export function isBtn(el) {
 	const tagName = el.tagName.toLowerCase();
 	const type = el.type && el.type.toLowerCase();
 	return (
@@ -201,7 +201,7 @@ export function parseQuery(str = '', { decode = decodeURIComponent } = {}) {
 }
 
 export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
-	const qs = Object.keys(obj)
+	return Object.keys(obj)
 		.reduce((a, k) => {
 			if (Object.prototype.hasOwnProperty.call(obj, k) && isNaN(parseInt(k, 10))) {
 				if (Array.isArray(obj[k])) {
@@ -212,7 +212,7 @@ export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 					}
 				} else if (isObj(obj[k])) {
 					let o = parseKeys(k, obj[k]);
-					a.push(stringifyObject(o));
+					a.push(stringifyObj(o));
 				} else {
 					a.push(`${k}=${encode(obj[k])}`);
 				}
@@ -220,7 +220,6 @@ export function stringifyQuery(obj = {}, { encode = encodeURIComponent } = {}) {
 			return a;
 		}, [])
 		.join('&');
-	return qs ? `?${qs}` : '';
 }
 
 export function injectParams(pattern, params, { encode = encodeURIComponent } = {}) {
@@ -283,8 +282,9 @@ export function normalizeHash(fragment, { decode = decodeURIComponent } = {}) {
 	return trimPrefix(decode(fragment), '#');
 }
 
-export function prependPrefix(str, pfx = '/') {
-	return (str + '').indexOf(pfx) !== 0 ? pfx + str : str;
+export function prependPrefix(str, pfx = '/', strict = false) {
+	str += '';
+	return !str && strict ? str : str.indexOf(pfx) !== 0 ? pfx + str : str;
 }
 
 export function trimPrefix(str, pfx) {
@@ -391,10 +391,10 @@ function parseKeys(key, val) {
 
 	seg && keys.push(`[${key.slice(seg.index)}]`);
 
-	return parseObject(keys, val);
+	return parseObj(keys, val);
 }
 
-function parseObject(chain, val) {
+function parseObj(chain, val) {
 	let leaf = val;
 
 	for (let i = chain.length - 1; i >= 0; --i) {
@@ -423,11 +423,11 @@ function parseObject(chain, val) {
 	return leaf;
 }
 
-function stringifyObject(obj = {}, nesting = '') {
+function stringifyObj(obj = {}, nesting = '') {
 	return Object.entries(obj)
 		.map(([key, val]) => {
 			if (typeof val === 'object') {
-				return stringifyObject(val, nesting ? `${nesting}[${key}]` : key);
+				return stringifyObj(val, nesting ? `${nesting}[${key}]` : key);
 			} else {
 				return `${nesting}[${key}]=${val}`;
 			}

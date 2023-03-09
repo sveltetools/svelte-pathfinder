@@ -89,19 +89,19 @@ paramable: <T extends {}>(pattern?: string, options?: ParseParamsOptions): Writa
 `goto` - perform navigation to the next router state by URL.
 
 ```javascript
-goto(url: string, state?: {});
+goto(url: string | URL, state?: {});
 ```
 
 `back` - perform navigation to the previous router state.
 
 ```javascript
-back(path?: string)
+back(url?: string | URL)
 ```
 
 `redirect` - update current url without new history record.
 
 ```javascript
-redirect(url: string, state?: {})
+redirect(url: string | URL, state?: {})
 ```
 
 `click` - handle click event from the link and perform navigation to its targets.
@@ -121,17 +121,22 @@ submit(event: SubmitEvent)
 - `prefs` - preferences object
     - `sideEffect` - manually disable/enable History API usage (changing URL) (default: auto).
     - `hashbang` - manually activate hashbang-routing.
-    - `basePath` - set base path if web app is located within a nested basepath.
+    - `base` - set base path if web app is located within a nested basepath.
     - `convertTypes` - disable converting types when parsing query/path parameters (default: true).
     - `nesting` - number of levels when pasring nested objects in query parameters (default: 3).
     - `array.format` - format for arrays in query parameters (possible values: 'bracket' (default), 'separator').
     - `array.separator` - if format is `separator` this field give you speficy which separator you want to use (default: ',').
+    - `breakHooks` - whether or not hooks execution should be stopped immediately after first fail or all hooks should be performed in any case (default: true).
+    - `anchor` - whether or not router should respect fragment (hash) value as an anchor if DOM element with appropriate id attribute is found (default: false).
+    - `scroll` - whether or not router should restore scroll position upon the navigation (default: false).
+    - `focus` - whether or not router should restore last focus on DOM element upon the navigation (default: false).
 
 To change the preferences, just import and change them somewhere on top of your code:
 
 ```javascript
 import { prefs } from 'svelte-pathfinder';
 
+prefs.scroll = true;
 prefs.convertTypes = false;
 prefs.array.format = 'separator';
 ```
@@ -342,6 +347,37 @@ Auto-handling all links in the application.
     import { submit, query, state } from 'svelte-pathfinder';
 </script>
 ```
+
+### Using hooks
+
+Hook is a callback function which will be executed before actual router state update to perform some side-effects. Callback function receives 3 arguments: (1) upcoming store value, (2) current store value and (3) name of the store (simple 'path', 'query' or 'fragment' string).
+
+If callback function return explicit `false`, specific router state update and subsequent navigation will be skipped. It can be useful for some kind of guards for specific router states.
+
+Hooks applicable only for major stores such as path, query or fragment. Hook can be added using `hook` method of particular store which is returns `cancel` function:
+
+```javascript
+onDestroy(path.hook(($path, $currentPath, name) => {
+
+    if ($path[0] === 'my' && ! isAuthorized()) return false; // skip router state update
+
+    // do some additional side-effect
+
+    console.log(`Hook of ${name} performed`); // output: Hook of path performed
+}));
+```
+
+> ⚠️ Note: hooks are not pre-defined thing that's why it matters when and in what order the hooks are created in your app. When the hook is just added, the callback function will be executed instantly with upcoming value (first argument) equals `null` which means not actual state update, but that the hook was just cocked. You able to use this fact in some way:
+
+```javascript
+onDestroy(query.hook(($query, $currentQuery, name) => {
+    if ($query === null) {
+        console.log(`Hook for ${name} is just added`);
+    }   
+}));
+```
+
+Multiple hooks can be added to each particular store and they will be executed in order of adding hooks to the store. By default, if some hook returns explicit false value, execution process will be stoped immediately which is more optimized. If you need to perform all hooks in any case, just use `prefs.breakHooks = false`. In this case, all hooks will be executed but state still won't be updated and navigation won't be performed.
 
 ## 🔖 SSR support (highly experimental)
 

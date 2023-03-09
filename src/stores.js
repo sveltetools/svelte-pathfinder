@@ -92,17 +92,15 @@ function createParsableStore(parse) {
 		const { subscribe, set } = writable((value = parse(value)), () => () => hooks.clear());
 
 		function update(val) {
-			value = parse(val);
-			if (
-				value.toString() !== serialized &&
-				runHooks(value, parse(serialized), parse.name) !== false
-			) {
-				serialized = value.toString();
+			val = parse(val);
+			if (val.toString() !== serialized && runHooks(val, value, parse.name) !== false) {
+				serialized = val.toString();
+				value = val;
 				set(value);
 			}
 		}
 
-		runHooks(value, null, parse.name);
+		runHooks(null, value, parse.name);
 
 		return {
 			subscribe,
@@ -115,7 +113,7 @@ function createParsableStore(parse) {
 			hook(cb) {
 				if (isFn(cb)) {
 					hooks.add(cb);
-					cb(value, null, parse.name);
+					cb(null, value, parse.name);
 				}
 				return () => hooks.delete(cb);
 			},

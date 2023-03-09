@@ -2,6 +2,7 @@
 
 # 4.5.0
 * (minor breaking change): `basePath` preference re-named to `base`.
+* (minor breaking change): `query.toString()` now returns url-encoded string *NOT* prefixed by `?` symbol. 
 * add support of full URL fallback in `back` helper instead of only `pathname`.
 * add support of URL instance instead of only string in `goto`, `back` and `redirect` helpers.
 * better support of hash-only links within `click` helper.
