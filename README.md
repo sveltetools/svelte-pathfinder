@@ -329,9 +329,9 @@ Auto-handling all links in the application.
 
     <!-- all visible fields will be propagated to $query by name attributes -->
 
-    <input name="q" value={$query.params.q} placeholder="Title...">
+    <input name="q" value={$query.q} placeholder="Title...">
 
-    <select name="option" value={$query.params.option}>
+    <select name="option" value={$query.option}>
         <option>1</option>
         <option>2</option>
         <option>3</option>

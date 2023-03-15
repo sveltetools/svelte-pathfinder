@@ -15,7 +15,7 @@ export interface Parsable<T> extends Readable<T> {
 }
 
 export interface SubmitEvent extends Event {
-    submitter: HTMLElement;
+    submitter: HTMLElement | null;
 }
 
 export interface ParseParamsOptions {

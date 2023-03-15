@@ -1,5 +1,9 @@
 # svelte-pathfinder changelog
 
+# 4.5.1
+* fix SubmitEvent type.
+* actualize README.
+
 # 4.5.0
 * (minor breaking change): `basePath` preference re-named to `base`.
 * (minor breaking change): `query.toString()` now returns url-encoded string *NOT* prefixed by `?` symbol. 
