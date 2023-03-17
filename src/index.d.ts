@@ -50,14 +50,17 @@ export type ConvertedParam =
     | null
     | undefined;
 
+export type Params = Record<string, ConvertedParam>
+export type State = Record<string, unknown>
+
 export declare const prefs: Prefs;
-export declare const path: Parsable<ConvertedParam[]>;
-export declare const query: Parsable<{ [key: string]: ConvertedParam }>;
+export declare const path: Parsable<string[]>;
+export declare const query: Parsable<Params>;
 export declare const fragment: Parsable<string>;
-export declare const state: Writable<{ [key: string]: any }>;
+export declare const state: Writable<State>;
 export declare const url: Readable<string>;
 export declare const pattern: Readable<
-    <T extends {}>(pattern?: string, options?: ParseParamsOptions) => T | null
+    <T extends Params>(pattern?: string, options?: ParseParamsOptions) => T | null
 >;
 
 export declare function goto(url?: string | URL, data?: {}): void;
@@ -66,7 +69,7 @@ export declare function back(url?: string | URL): void;
 export declare function click(e: MouseEvent): void;
 export declare function submit(e: SubmitEvent): void;
 
-export declare function paramable<T extends {}>(
+export declare function paramable<T extends Params>(
     pattern?: string,
     options?: ParseParamsOptions
 ): Writable<T>;
