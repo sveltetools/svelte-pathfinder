@@ -63,8 +63,8 @@ export declare const pattern: Readable<
     <T extends Params>(pattern?: string, options?: ParseParamsOptions) => T | null
 >;
 
-export declare function goto(url?: string | URL, data?: {}): void;
-export declare function redirect(url?: string | URL, data?: {}): void;
+export declare function goto(url?: string | URL, data?: State): void;
+export declare function redirect(url?: string | URL, data?: State): void;
 export declare function back(url?: string | URL): void;
 export declare function click(e: MouseEvent): void;
 export declare function submit(e: SubmitEvent): void;
