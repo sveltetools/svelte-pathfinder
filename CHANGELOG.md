@@ -1,5 +1,8 @@
 # svelte-pathfinder changelog
 
+# 4.6.1
+* fix empty state prefixing.
+
 # 4.6.0
 * (minor breaking change): revert prefixing to `query` and `fragment` stores after discussion with the community.
 * improve types.

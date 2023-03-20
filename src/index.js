@@ -47,7 +47,7 @@ const url = derived(
 		let skip = false;
 		tick().then(() => {
 			if (skip) return;
-			set($path + prependPrefix($query, '?', true) + prependPrefix($fragment, '#', true));
+			set($path + $query + $fragment);
 		});
 
 		return () => (skip = true);
