@@ -91,7 +91,7 @@ export function closest(el, tagName) {
 }
 
 export function setScroll(scroll, hash = '') {
-	const anchor = normalizeHash(hash);
+	const anchor = trimPrefix(normalizeHash(hash), '#');
 	if (scroll && prefs.scroll) {
 		const opts = isObj(prefs.scroll) ? { ...prefs.scroll, ...scroll } : scroll;
 		const { top = 0, left = 0 } = scroll;
@@ -279,7 +279,7 @@ export function parseParams(
 }
 
 export function normalizeHash(fragment, { decode = decodeURIComponent } = {}) {
-	return trimPrefix(decode(fragment), '#');
+	return decode(fragment);
 }
 
 export function prependPrefix(str, pfx = '/', strict = false) {

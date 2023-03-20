@@ -31,7 +31,7 @@ export const queryable = createParsableStore(function query($query = '') {
 	return !Object.prototype.hasOwnProperty.call($query, 'toString')
 		? Object.defineProperty($query, 'toString', {
 				value() {
-					return stringifyQuery(this);
+					return prependPrefix(stringifyQuery(this), '?');
 				},
 				configurable: false,
 				writable: false,
@@ -40,7 +40,7 @@ export const queryable = createParsableStore(function query($query = '') {
 });
 
 export const fragmentable = createParsableStore(function fragment($fragment = '') {
-	return normalizeHash($fragment);
+	return prependPrefix(normalizeHash($fragment), '#');
 });
 
 export function createParamStore(path) {

@@ -1,6 +1,6 @@
 {
     "name": "svelte-pathfinder",
-    "version": "4.5.1",
+    "version": "4.6.0",
     "description": "Tiny, state-based, advanced router for SvelteJS.",
     "main": "dist/index.js",
     "module": "dist/index.mjs",

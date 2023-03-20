@@ -1,5 +1,9 @@
 # svelte-pathfinder changelog
 
+# 4.6.0
+* (minor breaking change): revert prefixing to `query` and `fragment` stores after discussion with the community.
+* improve types.
+
 # 4.5.1
 * fix SubmitEvent type.
 * actualize README.

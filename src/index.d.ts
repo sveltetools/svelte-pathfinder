@@ -41,17 +41,10 @@ export interface Prefs {
     base: string;
 }
 
-export type Param =
-    | string
-    | boolean
-    | number
-    | {}
-    | []
-    | null
-    | undefined;
+export type Param = string | boolean | number | {} | [] | null | undefined;
 
-export type Params = Record<string, Param>
-export type State = Record<string, unknown>
+export type Params = Record<string, Param>;
+export type State = Record<string, unknown>;
 
 export declare const prefs: Prefs;
 export declare const path: Parsable<string[]>;
@@ -60,7 +53,10 @@ export declare const fragment: Parsable<string>;
 export declare const state: Writable<State>;
 export declare const url: Readable<string>;
 export declare const pattern: Readable<
-    <T extends Params>(pattern?: string, options?: ParseParamsOptions) => T | null
+    <T extends Params>(
+        pattern?: string,
+        options?: ParseParamsOptions
+    ) => T | null
 >;
 
 export declare function goto(url?: string | URL, data?: State): void;
