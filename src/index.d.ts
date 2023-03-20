@@ -41,7 +41,7 @@ export interface Prefs {
     base: string;
 }
 
-export type ConvertedParam =
+export type Param =
     | string
     | boolean
     | number
@@ -50,7 +50,7 @@ export type ConvertedParam =
     | null
     | undefined;
 
-export type Params = Record<string, ConvertedParam>
+export type Params = Record<string, Param>
 export type State = Record<string, unknown>
 
 export declare const prefs: Prefs;
