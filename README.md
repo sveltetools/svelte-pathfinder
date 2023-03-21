@@ -384,7 +384,7 @@ Multiple hooks can be added to each particular store and they will be executed i
 ```javascript
 require('svelte/register');
 
-const = express require('express');
+const express = require('express');
 
 const app = express();
 ...
