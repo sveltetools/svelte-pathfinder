@@ -141,6 +141,15 @@ prefs.convertTypes = false;
 prefs.array.format = 'separator';
 ```
 
+#### ParseParamsOptions
+
+Usually, you don't need to use second argument in `$pattern()` function and `paramable` store constructor, but in some cases its options can be useful for your goals:
+
+- `loose` - should the pattern match paths that are longer than the pattern itself? (default: false)
+- `blank` - should blank params object (with undeifned values) returned if pattern not match? (default: false)
+- `sensitive` - should be pattern case sensitive? (default: false)
+- `decode` - you can provide you own function to decode URL parameters. (default: decodeURIComponent will be used)
+
 ## 🕹 Usage
 
 ### Changing markup related to the router state
