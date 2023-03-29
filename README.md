@@ -194,7 +194,7 @@ Usually, you don't need to use second argument in `$pattern()` function and `par
 </script>
 ```
 
-Also, you able to use custom RegExp pattern instead of reguler path-to-regexp pattern in `$pattern()` function. In this case, if you want to interprent some part of this RegExp pattern as an path parameter you need to use RegExp's [named groups](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Backreferences#using_named_groups). For example, you need to make sure that path includes numeric identifier in second segment of the path:
+Also, you able to use custom RegExp pattern instead of regular path-to-regexp pattern in `$pattern()` function. In this case, if you want to interprent some part of this RegExp pattern as an path parameter you need to use RegExp's [named groups](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Groups_and_Backreferences#using_named_groups). For example, you need to make sure that path includes numeric identifier in second segment of the path:
 
 ```svelte
 {#if params = $pattern(/^\/todos\/(?<id>\d+)/)} <!-- will be matched only if second segment is a number -->
@@ -211,7 +211,7 @@ Also, you able to use custom RegExp pattern instead of reguler path-to-regexp pa
 </script>
 ```
 
-> ⚠️ Note: `paramable` stores still not support custom RegExp patterns. If you'll try to pass RegExp to `paramable` constructor it'll cause exception.
+> ⚠️ Note: `paramable` stores still not support custom RegExp patterns. If you'll try to pass RegExp to `paramable` constructor it'll cause exception. Maybe similar support will be added in the future.
 
 ### Performing updates of router state with optional side-effect to URL
 
