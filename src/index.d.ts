@@ -54,7 +54,7 @@ export declare const state: Writable<State>;
 export declare const url: Readable<string>;
 export declare const pattern: Readable<
     <T extends Params>(
-        pattern?: string,
+        pattern?: string | RegExp,
         options?: ParseParamsOptions
     ) => T | null
 >;

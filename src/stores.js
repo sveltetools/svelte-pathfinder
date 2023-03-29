@@ -45,6 +45,9 @@ export const fragmentable = createParsableStore(function fragment($fragment = ''
 
 export function createParamStore(path) {
 	return (pattern, options = {}) => {
+		if (pattern instanceof RegExp)
+			throw new Error('Paramable store do not support RegExp patterns.');
+
 		let params;
 
 		pattern = pattern.replace(/\/$/, '');

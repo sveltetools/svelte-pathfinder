@@ -1,5 +1,9 @@
 # svelte-pathfinder changelog
 
+# 4.7.0
+* support of custom RegExp pattern to `pattern` store-function.
+* support relative `query` links using `click` helpers.
+
 # 4.6.1
 * fix empty state prefixing.
 

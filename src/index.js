@@ -187,12 +187,13 @@ function click(e) {
 	)
 		return;
 
-	const url = a.getAttribute('href');
+	const href = a.getAttribute('href');
+	const url = a.href;
 	if (
-		!url ||
-		a.href.indexOf(location.origin) !== 0 ||
-		specialLinks.test(url) ||
-		(!prefs.hashbang && !useHashbang && url.startsWith('#'))
+		!href ||
+		url.indexOf(location.origin) !== 0 ||
+		specialLinks.test(href) ||
+		(!prefs.hashbang && !useHashbang && href.startsWith('#'))
 	)
 		return;
 
