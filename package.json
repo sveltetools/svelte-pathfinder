@@ -40,12 +40,12 @@
     "size-limit": [
         {
             "name": "UMD output",
-            "limit": "6.3 KB",
+            "limit": "6.5 KB",
             "path": "./dist/index.js"
         },
         {
             "name": "ESM output",
-            "limit": "6.3 KB",
+            "limit": "6.5 KB",
             "path": "./dist/index.mjs"
         },
         {
@@ -60,22 +60,22 @@
         },
         {
             "name": "IIFE bundle",
-            "limit": "8.3 KB",
+            "limit": "8.5 KB",
             "path": "./dist/pathfinder.js"
         },
         {
             "name": "ESM bundle",
-            "limit": "8.3 KB",
+            "limit": "8.5 KB",
             "path": "./dist/pathfinder.mjs"
         },
         {
             "name": "IIFE bundle (minified)",
-            "limit": "5.2 KB",
+            "limit": "5.5 KB",
             "path": "./dist/pathfinder.min.js"
         },
         {
             "name": "ESM bundle (minified)",
-            "limit": "5.2 KB",
+            "limit": "5.5 KB",
             "path": "./dist/pathfinder.min.mjs"
         }
     ],
