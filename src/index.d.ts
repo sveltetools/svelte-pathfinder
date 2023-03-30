@@ -1,4 +1,4 @@
-import { Writable, Readable, Updater } from 'svelte/store';
+import { Writable, Readable, Updater, Unsubscriber } from 'svelte/store';
 
 export type ParsableStoreNames = 'path' | 'query' | 'fragment';
 
@@ -11,7 +11,7 @@ export type Hook<T> = (
 export interface Parsable<T> extends Readable<T> {
     set(this: void, value: T | string): void;
     update(this: void, updater: Updater<T | string>): void;
-    hook(fn: Hook<T>): () => void;
+    hook(fn: Hook<T>): Unsubscriber;
 }
 
 export interface SubmitEvent extends Event {
