@@ -47,7 +47,7 @@ export function getLocation() {
 		const hash = location.hash;
 		return new URL(
 			hash.indexOf(hashbang) === 0 ? hash.substring(2) : hash.substring(1),
-			'file:'
+			'file:',
 		);
 	}
 
@@ -232,7 +232,7 @@ export function injectParams(pattern, params, { encode = encodeURIComponent } = 
 export function parseParams(
 	path = '',
 	pattern = '*',
-	{ loose = false, sensitive = false, blank = false, decode = decodeURIComponent } = {}
+	{ loose = false, sensitive = false, blank = false, decode = decodeURIComponent } = {},
 ) {
 	const blanks = {};
 	const rgx =
