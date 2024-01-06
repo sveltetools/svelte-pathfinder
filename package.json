@@ -7,6 +7,11 @@
     "cdn": "dist/pathfinder.min.js",
     "unpkg": "dist/pathfinder.min.js",
     "svelte": "src/index.js",
+    "exports": {
+        ".": {
+            "svelte": "./src/index.js"
+        }
+    },
     "types": "src/index.d.ts",
     "files": [
         "dist",
