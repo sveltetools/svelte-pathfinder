@@ -127,7 +127,7 @@ if (sideEffect || isSubWindow) {
 	}
 	cleanup.add(
 		listenEvent(
-			'unload',
+			'beforeunload',
 			() => {
 				cleanup.forEach((off) => off());
 				cleanup.clear();
