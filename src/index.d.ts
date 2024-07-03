@@ -5,7 +5,7 @@ export type ParsableStoreNames = 'path' | 'query' | 'fragment';
 export type Hook<T> = (
     value: T | null,
     currValue: T,
-    storeName: ParsableStoreNames,
+    storeName: ParsableStoreNames
 ) => boolean | undefined;
 
 export interface Parsable<T> extends Readable<T> {
@@ -55,7 +55,7 @@ export declare const url: Readable<string>;
 export declare const pattern: Readable<
     <T extends Params>(
         pattern?: string | RegExp,
-        options?: ParseParamsOptions,
+        options?: ParseParamsOptions
     ) => T | null
 >;
 
@@ -67,5 +67,5 @@ export declare function submit(e: SubmitEvent): void;
 
 export declare function paramable<T extends Params>(
     pattern?: string,
-    options?: ParseParamsOptions,
+    options?: ParseParamsOptions
 ): Writable<T>;

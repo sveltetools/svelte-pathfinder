@@ -52,7 +52,7 @@ const url = derived(
 
 		return () => (skip = true);
 	},
-	pathname + search + hash,
+	pathname + search + hash
 );
 
 const pattern = derived(path, ($path) => parseParams.bind(null, $path.toString()));
@@ -94,7 +94,7 @@ if (sideEffect || isSubWindow) {
 			!popstate && after($url);
 			!replace && len++;
 			init = replace = popstate = false;
-		}),
+		})
 	);
 
 	if (hasPushState) {
@@ -104,16 +104,16 @@ if (sideEffect || isSubWindow) {
 				history.replaceState(
 					$state,
 					null,
-					location.pathname + location.search + location.hash,
+					location.pathname + location.search + location.hash
 				);
-			}),
+			})
 		);
 		cleanup.add(
 			listenEvent('popstate', (e) => {
 				popstate = true;
 				goto(location.href, e.state);
 				after(getShortURL(location.href), e.state);
-			}),
+			})
 		);
 	} else {
 		cleanup.add(
@@ -122,7 +122,7 @@ if (sideEffect || isSubWindow) {
 				if (!prefs.hashbang && !useHashbang) return fragment.set(location.hash);
 				goto(location.hash);
 				after(getShortURL(location.hash));
-			}),
+			})
 		);
 	}
 	cleanup.add(
@@ -132,8 +132,8 @@ if (sideEffect || isSubWindow) {
 				cleanup.forEach((off) => off());
 				cleanup.clear();
 			},
-			true,
-		),
+			true
+		)
 	);
 }
 
