@@ -125,7 +125,7 @@
         "@rollup/plugin-commonjs": "^25.0.3",
         "@rollup/plugin-node-resolve": "^15.1.0",
         "@rollup/plugin-terser": "^0.4.3",
-        "@size-limit/preset-app": "^8.2.6",
+        "@size-limit/preset-app": "^11.2.0",
         "browserslist-config-google": "^3.0.1",
         "core-js": "^3.32.0",
         "eslint": "^8.46.0",
