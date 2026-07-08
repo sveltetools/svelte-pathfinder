@@ -185,7 +185,7 @@ export function parseQuery(str = '', { decode = decodeURIComponent } = {}) {
 					let o = parseKeys(key, val);
 					obj = Object.keys(o).reduce((obj, key) => {
 						const val = prefs.convertTypes ? convertType(o[key]) : o[key];
-						if (obj[key]) {
+						if (obj[key] && typeof obj[key] != 'string') {
 							Array.isArray(obj[key])
 								? (obj[key] = obj[key].concat(val))
 								: Object.assign(obj[key], val);
